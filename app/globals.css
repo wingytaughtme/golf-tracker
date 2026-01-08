@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #F5F5F0;
+    --foreground: #1A1A1A;
+  }
+
+  html {
+    @apply antialiased;
+  }
+
+  body {
+    @apply bg-golf-background text-golf-text;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  /* Safe area for mobile bottom navigation */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+
+  /* Button base styles */
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary {
+    @apply btn bg-primary text-white hover:bg-primary-600 focus:ring-primary;
+  }
+
+  .btn-secondary {
+    @apply btn bg-secondary text-white hover:bg-secondary-600 focus:ring-secondary;
+  }
+
+  .btn-accent {
+    @apply btn bg-accent text-primary hover:bg-accent-dark focus:ring-accent;
+  }
+
+  .btn-outline {
+    @apply btn border-2 border-primary text-primary hover:bg-primary hover:text-white focus:ring-primary;
+  }
+
+  .btn-ghost {
+    @apply btn text-golf-text hover:bg-gray-100 focus:ring-gray-300;
+  }
+
+  /* Card component */
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100;
+  }
+
+  /* Input styles */
+  .input {
+    @apply w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-colors;
+  }
+
+  .input-error {
+    @apply input border-red-500 focus:ring-red-500;
+  }
+
+  /* Label styles */
+  .label {
+    @apply block text-sm font-medium text-golf-text mb-1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Score styling utilities */
+  .score-eagle {
+    @apply bg-golf-eagle text-white rounded-full;
+  }
+
+  .score-birdie {
+    @apply bg-golf-birdie text-white rounded-full;
+  }
+
+  .score-par {
+    @apply bg-transparent;
+  }
+
+  .score-bogey {
+    @apply bg-golf-bogey/20 text-golf-bogey border border-golf-bogey;
+  }
+
+  .score-double-bogey {
+    @apply bg-golf-bogey text-white;
+  }
+}

@@ -1,0 +1,239 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================================
+// ENUMS
+// ============================================================================
+
+enum RoundStatus {
+  in_progress
+  completed
+  abandoned
+}
+
+enum RoundType {
+  casual
+  tournament
+  practice
+}
+
+enum CourseType {
+  public
+  private
+  resort
+  municipal
+}
+
+// ============================================================================
+// MODELS
+// ============================================================================
+
+model User {
+  id            String    @id @default(uuid()) @db.Uuid
+  email         String    @unique @db.VarChar(255)
+  password_hash String?   @db.VarChar(255)
+  name          String?   @db.VarChar(100)
+  avatar_url    String?   @db.VarChar(255)
+  created_at    DateTime  @default(now())
+
+  // Relations
+  players         Player[]
+  rounds_created  Round[]
+  favorite_courses FavoriteCourse[]
+
+  @@map("users")
+}
+
+model Player {
+  id             String    @id @default(uuid()) @db.Uuid
+  user_id        String?   @db.Uuid
+  name           String    @db.VarChar(100)
+  email          String?   @unique @db.VarChar(255)
+  ghin_number    String?   @db.VarChar(20)
+  home_course_id String?   @db.Uuid
+  created_at     DateTime  @default(now())
+
+  // Relations
+  user             User?              @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  home_course      Course?            @relation(fields: [home_course_id], references: [id], onDelete: SetNull)
+  round_players    RoundPlayer[]
+  handicap_history HandicapHistory[]
+
+  @@index([user_id])
+  @@index([home_course_id])
+  @@map("players")
+}
+
+model Course {
+  id          String      @id @default(uuid()) @db.Uuid
+  name        String      @db.VarChar(255)
+  city        String      @db.VarChar(100)
+  state       String      @db.VarChar(2)
+  zip_code    String?     @db.VarChar(10)
+  address     String?     @db.VarChar(255)
+  phone       String?     @db.VarChar(20)
+  website     String?     @db.VarChar(255)
+  num_holes   Int         @default(18)
+  course_type CourseType?
+  latitude    Decimal?    @db.Decimal(10, 7)
+  longitude   Decimal?    @db.Decimal(10, 7)
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+
+  // Relations
+  tee_sets         TeeSet[]
+  rounds           Round[]
+  players_home     Player[]
+  favorite_courses FavoriteCourse[]
+
+  @@index([state])
+  @@index([name])
+  @@map("courses")
+}
+
+model TeeSet {
+  id            String  @id @default(uuid()) @db.Uuid
+  course_id     String  @db.Uuid
+  name          String  @db.VarChar(50)
+  color         String  @db.VarChar(30)
+  course_rating Decimal @db.Decimal(4, 1)
+  slope_rating  Int
+  total_yardage Int?
+  gender        String? @db.VarChar(10)
+
+  // Relations
+  course Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  holes  Hole[]
+  rounds Round[]
+
+  @@index([course_id])
+  @@map("tee_sets")
+}
+
+model Hole {
+  id             String @id @default(uuid()) @db.Uuid
+  tee_set_id     String @db.Uuid
+  hole_number    Int
+  par            Int
+  distance       Int
+  handicap_index Int
+
+  // Relations
+  tee_set TeeSet  @relation(fields: [tee_set_id], references: [id], onDelete: Cascade)
+  scores  Score[]
+
+  @@unique([tee_set_id, hole_number])
+  @@index([tee_set_id])
+  @@map("holes")
+}
+
+model Round {
+  id           String      @id @default(uuid()) @db.Uuid
+  course_id    String      @db.Uuid
+  tee_set_id   String      @db.Uuid
+  created_by   String      @db.Uuid
+  date_played  DateTime    @db.Date
+  status       RoundStatus @default(in_progress)
+  round_type   RoundType   @default(casual)
+  weather      String?     @db.VarChar(50)
+  temperature  Int?
+  notes        String?     @db.Text
+  started_at   DateTime?
+  completed_at DateTime?
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt
+
+  // Relations
+  course        Course        @relation(fields: [course_id], references: [id], onDelete: Restrict)
+  tee_set       TeeSet        @relation(fields: [tee_set_id], references: [id], onDelete: Restrict)
+  creator       User          @relation(fields: [created_by], references: [id], onDelete: Restrict)
+  round_players RoundPlayer[]
+
+  @@index([course_id])
+  @@index([tee_set_id])
+  @@index([created_by])
+  @@index([date_played])
+  @@index([status])
+  @@map("rounds")
+}
+
+model RoundPlayer {
+  id               String   @id @default(uuid()) @db.Uuid
+  round_id         String   @db.Uuid
+  player_id        String   @db.Uuid
+  playing_handicap Decimal? @db.Decimal(4, 1)
+  gross_score      Int?
+  net_score        Decimal? @db.Decimal(5, 1)
+  position         Int?
+
+  // Relations
+  round  Round   @relation(fields: [round_id], references: [id], onDelete: Cascade)
+  player Player  @relation(fields: [player_id], references: [id], onDelete: Restrict)
+  scores Score[]
+
+  @@unique([round_id, player_id])
+  @@index([round_id])
+  @@index([player_id])
+  @@map("round_players")
+}
+
+model Score {
+  id                   String   @id @default(uuid()) @db.Uuid
+  round_player_id      String   @db.Uuid
+  hole_id              String   @db.Uuid
+  strokes              Int?
+  putts                Int?
+  fairway_hit          Boolean?
+  green_in_regulation  Boolean?
+  penalties            Int      @default(0)
+  sand_shots           Int      @default(0)
+  notes                String?  @db.VarChar(255)
+
+  // Relations
+  round_player RoundPlayer @relation(fields: [round_player_id], references: [id], onDelete: Cascade)
+  hole         Hole        @relation(fields: [hole_id], references: [id], onDelete: Restrict)
+
+  @@unique([round_player_id, hole_id])
+  @@index([round_player_id])
+  @@index([hole_id])
+  @@map("scores")
+}
+
+model HandicapHistory {
+  id                  String   @id @default(uuid()) @db.Uuid
+  player_id           String   @db.Uuid
+  handicap_index      Decimal  @db.Decimal(4, 1)
+  effective_date      DateTime @db.Date
+  calculation_details Json?
+
+  // Relations
+  player Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+
+  @@index([player_id])
+  @@index([effective_date])
+  @@map("handicap_history")
+}
+
+model FavoriteCourse {
+  id         String   @id @default(uuid()) @db.Uuid
+  user_id    String   @db.Uuid
+  course_id  String   @db.Uuid
+  created_at DateTime @default(now())
+
+  // Relations
+  user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [course_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, course_id])
+  @@index([user_id])
+  @@index([course_id])
+  @@map("favorite_courses")
+}

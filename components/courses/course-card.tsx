@@ -14,7 +14,7 @@ interface CourseCardProps {
     tee_set_count: number;
   };
   isFavorite?: boolean;
-  onToggleFavorite?: (courseId: string) => void;
+  onFavoriteChange?: (courseId: string, isFavorite: boolean) => void;
 }
 
 const courseTypeBadgeColors: Record<string, string> = {
@@ -24,9 +24,10 @@ const courseTypeBadgeColors: Record<string, string> = {
   municipal: 'bg-green-100 text-green-800',
 };
 
-export default function CourseCard({ course, isFavorite = false, onToggleFavorite }: CourseCardProps) {
+export default function CourseCard({ course, isFavorite = false, onFavoriteChange }: CourseCardProps) {
   const [favorite, setFavorite] = useState(isFavorite);
   const [isToggling, setIsToggling] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -35,14 +36,34 @@ export default function CourseCard({ course, isFavorite = false, onToggleFavorit
     if (isToggling) return;
 
     setIsToggling(true);
+    setError(null);
+
+    // Optimistic update
+    const previousState = favorite;
     setFavorite(!favorite);
 
     try {
-      if (onToggleFavorite) {
-        onToggleFavorite(course.id);
+      const method = previousState ? 'DELETE' : 'POST';
+      const response = await fetch(`/api/user/favorites/${course.id}`, {
+        method,
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update favorite');
       }
-    } catch {
-      setFavorite(favorite);
+
+      // Notify parent of successful change
+      if (onFavoriteChange) {
+        onFavoriteChange(course.id, !previousState);
+      }
+    } catch (err) {
+      // Revert on error
+      setFavorite(previousState);
+      setError(err instanceof Error ? err.message : 'Failed to update favorite');
+
+      // Clear error after 3 seconds
+      setTimeout(() => setError(null), 3000);
     } finally {
       setIsToggling(false);
     }
@@ -62,14 +83,17 @@ export default function CourseCard({ course, isFavorite = false, onToggleFavorit
             onClick={handleFavoriteClick}
             disabled={isToggling}
             className={`flex-shrink-0 p-2 rounded-full transition-colors ${
+              isToggling ? 'opacity-50 cursor-wait' : ''
+            } ${
               favorite
                 ? 'text-red-500 hover:bg-red-50'
                 : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
             }`}
             aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'}
+            title={error || (favorite ? 'Remove from favorites' : 'Add to favorites')}
           >
             <svg
-              className="h-5 w-5"
+              className={`h-5 w-5 ${isToggling ? 'animate-pulse' : ''}`}
               fill={favorite ? 'currentColor' : 'none'}
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -83,6 +107,10 @@ export default function CourseCard({ course, isFavorite = false, onToggleFavorit
             </svg>
           </button>
         </div>
+
+        {error && (
+          <p className="text-red-500 text-xs mt-2">{error}</p>
+        )}
 
         <div className="flex flex-wrap items-center gap-2 mt-4">
           {course.course_type && (

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import CourseCard from '@/components/courses/course-card';
 
 interface Course {
@@ -106,6 +107,7 @@ export default function CoursesPage() {
   const [state, setState] = useState('');
   const [courseType, setCourseType] = useState('');
   const [courses, setCourses] = useState<Course[]>([]);
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
@@ -116,6 +118,23 @@ export default function CoursesPage() {
   });
 
   const debouncedSearch = useDebounce(search, 300);
+
+  // Fetch user's favorites
+  useEffect(() => {
+    async function fetchFavorites() {
+      try {
+        const response = await fetch('/api/user/favorites');
+        if (response.ok) {
+          const data = await response.json();
+          setFavoriteIds(new Set(data.data.map((c: Course) => c.id)));
+        }
+      } catch {
+        // Silently fail - user might not be logged in
+      }
+    }
+
+    fetchFavorites();
+  }, []);
 
   const fetchCourses = useCallback(async (reset = false) => {
     setIsLoading(true);
@@ -171,9 +190,16 @@ export default function CoursesPage() {
     }
   }, [pagination.offset]);
 
-  const handleToggleFavorite = async (courseId: string) => {
-    // TODO: Implement favorite toggle API call
-    console.log('Toggle favorite for course:', courseId);
+  const handleFavoriteChange = (courseId: string, isFavorite: boolean) => {
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (isFavorite) {
+        next.add(courseId);
+      } else {
+        next.delete(courseId);
+      }
+      return next;
+    });
   };
 
   const clearFilters = () => {
@@ -187,9 +213,35 @@ export default function CoursesPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-display font-bold text-golf-text">Courses</h1>
-        <p className="text-gray-600 mt-1">Find and browse golf courses</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-display font-bold text-golf-text">Courses</h1>
+          <p className="text-gray-600 mt-1">Find and browse golf courses</p>
+        </div>
+        <Link
+          href="/courses/favorites"
+          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+        >
+          <svg
+            className="h-4 w-4 text-red-500"
+            fill="currentColor"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+            />
+          </svg>
+          My Favorites
+          {favoriteIds.size > 0 && (
+            <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">
+              {favoriteIds.size}
+            </span>
+          )}
+        </Link>
       </div>
 
       {/* Search and Filters */}
@@ -381,7 +433,8 @@ export default function CoursesPage() {
               <CourseCard
                 key={course.id}
                 course={course}
-                onToggleFavorite={handleToggleFavorite}
+                isFavorite={favoriteIds.has(course.id)}
+                onFavoriteChange={handleFavoriteChange}
               />
             ))}
           </div>

@@ -12,6 +12,7 @@ interface RoundPlayerInput {
 interface CreateRoundInput {
   course_id: string;
   tee_set_id: string;
+  nine_ids: string[];
   date_played: string;
   round_type: 'casual' | 'tournament' | 'practice';
   weather?: string | null;
@@ -37,6 +38,20 @@ export async function POST(request: NextRequest) {
     if (!body.course_id || !body.tee_set_id || !body.date_played) {
       return NextResponse.json(
         { error: 'Missing required fields: course_id, tee_set_id, date_played' },
+        { status: 400 }
+      );
+    }
+
+    if (!body.nine_ids || body.nine_ids.length === 0) {
+      return NextResponse.json(
+        { error: 'At least one nine must be selected' },
+        { status: 400 }
+      );
+    }
+
+    if (body.nine_ids.length > 2) {
+      return NextResponse.json(
+        { error: 'Maximum 2 nines allowed per round' },
         { status: 400 }
       );
     }
@@ -73,11 +88,6 @@ export async function POST(request: NextRequest) {
         id: body.tee_set_id,
         course_id: body.course_id,
       },
-      include: {
-        holes: {
-          orderBy: { hole_number: 'asc' },
-        },
-      },
     });
 
     if (!teeSet) {
@@ -86,6 +96,30 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    // Verify nines exist and belong to course, and get their holes
+    const nines = await prisma.nine.findMany({
+      where: {
+        id: { in: body.nine_ids },
+        course_id: body.course_id,
+      },
+      include: {
+        holes: {
+          orderBy: { hole_number: 'asc' },
+        },
+      },
+    });
+
+    if (nines.length !== body.nine_ids.length) {
+      return NextResponse.json(
+        { error: 'One or more nines not found or do not belong to this course' },
+        { status: 404 }
+      );
+    }
+
+    // Get all holes from selected nines in order
+    const orderedNines = body.nine_ids.map(id => nines.find(n => n.id === id)!);
+    const allHoles = orderedNines.flatMap(nine => nine.holes);
 
     // Verify all players exist
     const playerIds = body.players.map((p) => p.player_id);
@@ -100,7 +134,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the round with players and empty scores in a transaction
+    // Create the round with players, nines, and empty scores in a transaction
     const round = await prisma.$transaction(async (tx) => {
       // Create the round
       const newRound = await tx.round.create({
@@ -118,6 +152,17 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      // Create RoundNine records to track which nines are played and in what order
+      for (let i = 0; i < body.nine_ids.length; i++) {
+        await tx.roundNine.create({
+          data: {
+            round_id: newRound.id,
+            nine_id: body.nine_ids[i],
+            play_order: i,
+          },
+        });
+      }
+
       // Create round players with their scores
       for (const playerInput of body.players) {
         const roundPlayer = await tx.roundPlayer.create({
@@ -128,9 +173,9 @@ export async function POST(request: NextRequest) {
           },
         });
 
-        // Create empty scores for all holes
+        // Create empty scores for all holes from selected nines
         await tx.score.createMany({
-          data: teeSet.holes.map((hole) => ({
+          data: allHoles.map((hole) => ({
             round_player_id: roundPlayer.id,
             hole_id: hole.id,
             strokes: null,
@@ -166,6 +211,18 @@ export async function POST(request: NextRequest) {
             course_rating: true,
             slope_rating: true,
           },
+        },
+        round_nines: {
+          include: {
+            nine: {
+              select: {
+                id: true,
+                name: true,
+                nine_type: true,
+              },
+            },
+          },
+          orderBy: { play_order: 'asc' },
         },
         round_players: {
           include: {

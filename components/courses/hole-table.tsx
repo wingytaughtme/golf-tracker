@@ -138,33 +138,29 @@ export default function HoleTable({ holes, totals, teeColor = 'blue' }: HoleTabl
             <td className="px-2 py-2 font-semibold text-green-800 border-r border-gray-200">
               Par
             </td>
-            {frontNine.map((hole, idx) => (
+            {frontNine.map((hole) => (
               <td
                 key={hole.id}
-                className={`px-2 py-2 text-center font-medium text-green-800 border-r border-gray-200 ${
-                  idx % 2 === 0 ? 'bg-green-100' : 'bg-green-50'
-                }`}
+                className="px-2 py-2 text-center font-medium text-green-800 border-r border-gray-200 bg-green-50"
               >
                 {hole.par}
               </td>
             ))}
-            <td className="px-3 py-2 text-center font-bold text-green-900 bg-green-200 border-r border-gray-300">
+            <td className="px-3 py-2 text-center font-bold text-green-900 bg-green-100 border-r border-gray-300">
               {totals.front.par}
             </td>
-            {backNine.map((hole, idx) => (
+            {backNine.map((hole) => (
               <td
                 key={hole.id}
-                className={`px-2 py-2 text-center font-medium text-green-800 border-r border-gray-200 ${
-                  idx % 2 === 0 ? 'bg-green-100' : 'bg-green-50'
-                }`}
+                className="px-2 py-2 text-center font-medium text-green-800 border-r border-gray-200 bg-green-50"
               >
                 {hole.par}
               </td>
             ))}
-            <td className="px-3 py-2 text-center font-bold text-green-900 bg-green-200 border-r border-gray-300">
+            <td className="px-3 py-2 text-center font-bold text-green-900 bg-green-100 border-r border-gray-300">
               {totals.back.par}
             </td>
-            <td className="px-3 py-2 text-center font-bold text-green-900 bg-green-300">
+            <td className="px-3 py-2 text-center font-bold text-green-900 bg-green-200">
               {totals.total.par}
             </td>
           </tr>

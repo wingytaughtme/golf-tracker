@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PlayerSelector from '@/components/players/player-selector';
+import NineSelector, { Nine } from '@/components/courses/nine-selector';
 
 interface Course {
   id: string;
@@ -41,6 +42,8 @@ interface PlayerWithHandicap {
 interface WizardData {
   course: Course | null;
   teeSet: TeeSet | null;
+  nineIds: string[];
+  nines: Nine[];
   players: PlayerWithHandicap[];
   datePlayed: string;
   roundType: 'casual' | 'tournament' | 'practice';
@@ -52,8 +55,9 @@ interface WizardData {
 const STEPS = [
   { id: 1, name: 'Course', description: 'Select a course' },
   { id: 2, name: 'Tees', description: 'Choose tee set' },
-  { id: 3, name: 'Players', description: 'Add players' },
-  { id: 4, name: 'Details', description: 'Round details' },
+  { id: 3, name: 'Nines', description: 'Select nines' },
+  { id: 4, name: 'Players', description: 'Add players' },
+  { id: 5, name: 'Details', description: 'Round details' },
 ];
 
 export default function RoundSetupWizard() {
@@ -65,6 +69,8 @@ export default function RoundSetupWizard() {
   const [wizardData, setWizardData] = useState<WizardData>({
     course: null,
     teeSet: null,
+    nineIds: [],
+    nines: [],
     players: [],
     datePlayed: new Date().toISOString().split('T')[0],
     roundType: 'casual',
@@ -80,8 +86,10 @@ export default function RoundSetupWizard() {
       case 2:
         return wizardData.teeSet !== null;
       case 3:
-        return wizardData.players.length > 0;
+        return wizardData.nineIds.length > 0;
       case 4:
+        return wizardData.players.length > 0;
+      case 5:
         return wizardData.datePlayed !== '';
       default:
         return false;
@@ -89,7 +97,7 @@ export default function RoundSetupWizard() {
   }, [currentStep, wizardData]);
 
   const handleNext = () => {
-    if (canProceed() && currentStep < 4) {
+    if (canProceed() && currentStep < 5) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -101,7 +109,7 @@ export default function RoundSetupWizard() {
   };
 
   const handleSubmit = async () => {
-    if (!wizardData.course || !wizardData.teeSet || wizardData.players.length === 0) {
+    if (!wizardData.course || !wizardData.teeSet || wizardData.nineIds.length === 0 || wizardData.players.length === 0) {
       setError('Please complete all required fields');
       return;
     }
@@ -116,6 +124,7 @@ export default function RoundSetupWizard() {
         body: JSON.stringify({
           course_id: wizardData.course.id,
           tee_set_id: wizardData.teeSet.id,
+          nine_ids: wizardData.nineIds,
           date_played: wizardData.datePlayed,
           round_type: wizardData.roundType,
           weather: wizardData.weather || null,
@@ -164,21 +173,30 @@ export default function RoundSetupWizard() {
             course={wizardData.course}
             selectedTeeSet={wizardData.teeSet}
             onSelect={(teeSet) => {
-              setWizardData({ ...wizardData, teeSet });
+              setWizardData({ ...wizardData, teeSet, nineIds: [], nines: [] });
               setCurrentStep(3);
             }}
             onBack={handleBack}
           />
         )}
 
-        {currentStep === 3 && (
+        {currentStep === 3 && wizardData.course && (
+          <NineSelectionStep
+            course={wizardData.course}
+            selectedNineIds={wizardData.nineIds}
+            onChange={(nineIds, nines) => setWizardData({ ...wizardData, nineIds, nines })}
+            onBack={handleBack}
+          />
+        )}
+
+        {currentStep === 4 && (
           <PlayerSelectionStep
             players={wizardData.players}
             onChange={(players) => setWizardData({ ...wizardData, players })}
           />
         )}
 
-        {currentStep === 4 && (
+        {currentStep === 5 && (
           <RoundDetailsStep
             data={wizardData}
             onChange={(updates) => setWizardData({ ...wizardData, ...updates })}
@@ -203,7 +221,7 @@ export default function RoundSetupWizard() {
           Back
         </button>
 
-        {currentStep < 4 ? (
+        {currentStep < 5 ? (
           <button
             onClick={handleNext}
             disabled={!canProceed()}
@@ -655,7 +673,48 @@ function TeeSelectionStep({
   );
 }
 
-// Step 3: Player Selection
+// Step 3: Nine Selection
+function NineSelectionStep({
+  course,
+  selectedNineIds,
+  onChange,
+  onBack,
+}: {
+  course: Course;
+  selectedNineIds: string[];
+  onChange: (nineIds: string[], nines: Nine[]) => void;
+  onBack: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-2"
+        >
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Change tees
+        </button>
+        <h2 className="text-lg font-semibold text-golf-text">Select Nines to Play</h2>
+        <p className="text-gray-500 text-sm mt-1">
+          Choose which nines you&apos;ll be playing for this round
+        </p>
+      </div>
+
+      <NineSelector
+        courseId={course.id}
+        selectedNineIds={selectedNineIds}
+        onChange={onChange}
+        maxNines={2}
+        minNines={1}
+      />
+    </div>
+  );
+}
+
+// Step 4: Player Selection
 function PlayerSelectionStep({
   players,
   onChange,
@@ -775,7 +834,7 @@ function PlayerSelectionStep({
   );
 }
 
-// Step 4: Round Details
+// Step 5: Round Details
 function RoundDetailsStep({
   data,
   onChange,
@@ -799,6 +858,12 @@ function RoundDetailsStep({
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">Tees</span>
           <span className="font-medium text-golf-text">{data.teeSet?.name}</span>
+        </div>
+        <div className="flex justify-between text-sm">
+          <span className="text-gray-500">Nines</span>
+          <span className="font-medium text-golf-text">
+            {data.nines.map((n) => n.name).join(' + ')}
+          </span>
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-gray-500">Players</span>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import TeeSelector from '@/components/courses/tee-selector';
 import HoleTable from '@/components/courses/hole-table';
@@ -42,6 +42,8 @@ interface Course {
   num_holes: number;
   course_type: string | null;
   rounds_played: number;
+  source: string | null;
+  created_by: string | null;
   tee_sets: TeeSet[];
 }
 
@@ -54,6 +56,7 @@ const courseTypeBadgeColors: Record<string, string> = {
 
 export default function CourseDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const courseId = params.id as string;
 
   const [course, setCourse] = useState<Course | null>(null);
@@ -63,6 +66,12 @@ export default function CourseDetailPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [favoriteError, setFavoriteError] = useState<string | null>(null);
+
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchCourse() {
@@ -136,6 +145,31 @@ export default function CourseDetailPage() {
       setTimeout(() => setFavoriteError(null), 3000);
     } finally {
       setIsTogglingFavorite(false);
+    }
+  };
+
+  const handleDeleteCourse = async () => {
+    if (!course || deleteConfirmText !== course.name) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const response = await fetch(`/api/courses/${courseId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete course');
+      }
+
+      // Redirect to courses list after successful deletion
+      router.push('/courses');
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete course');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -232,33 +266,67 @@ export default function CourseDetailPage() {
               </p>
             </div>
 
-            <div className="flex flex-col items-end gap-1">
-              <button
-                onClick={handleToggleFavorite}
-                disabled={isTogglingFavorite}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${
-                  isTogglingFavorite ? 'opacity-50 cursor-wait' : ''
-                } ${
-                  isFavorite
-                    ? 'border-red-200 bg-red-50 text-red-600'
-                    : 'border-gray-200 hover:border-gray-300 text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <svg
-                  className={`h-5 w-5 ${isTogglingFavorite ? 'animate-pulse' : ''}`}
-                  fill={isFavorite ? 'currentColor' : 'none'}
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-2">
+                {course.source === 'user_created' && (
+                  <>
+                    <Link
+                      href={`/courses/${course.id}/edit`}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-gray-200 hover:border-gray-300 text-gray-600 hover:text-gray-900 transition-all"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => setShowDeleteModal(true)}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-gray-200 hover:border-red-300 text-gray-600 hover:text-red-600 transition-all"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                      Delete
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={handleToggleFavorite}
+                  disabled={isTogglingFavorite}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all ${
+                    isTogglingFavorite ? 'opacity-50 cursor-wait' : ''
+                  } ${
+                    isFavorite
+                      ? 'border-red-200 bg-red-50 text-red-600'
+                      : 'border-gray-200 hover:border-gray-300 text-gray-600 hover:text-gray-900'
+                  }`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                  />
-                </svg>
-                {isFavorite ? 'Favorited' : 'Add to Favorites'}
-              </button>
+                  <svg
+                    className={`h-5 w-5 ${isTogglingFavorite ? 'animate-pulse' : ''}`}
+                    fill={isFavorite ? 'currentColor' : 'none'}
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                    />
+                  </svg>
+                  {isFavorite ? 'Favorited' : 'Add to Favorites'}
+                </button>
+              </div>
               {favoriteError && (
                 <p className="text-red-500 text-xs">{favoriteError}</p>
               )}
@@ -383,6 +451,88 @@ export default function CourseDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => {
+              if (!isDeleting) {
+                setShowDeleteModal(false);
+                setDeleteConfirmText('');
+                setDeleteError(null);
+              }
+            }}
+          />
+
+          {/* Modal */}
+          <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Delete Course</h3>
+                <p className="text-sm text-gray-500">This action cannot be undone</p>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-700 mb-3">
+                This will permanently delete <strong>{course.name}</strong> and all associated data
+                (holes, tee sets, ratings, yardages).
+              </p>
+              <p className="text-sm text-gray-700 mb-3">
+                To confirm, type the course name below:
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={course.name}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                disabled={isDeleting}
+              />
+            </div>
+
+            {deleteError && (
+              <div className="mb-4 rounded-md bg-red-50 p-3">
+                <p className="text-sm text-red-700">{deleteError}</p>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setDeleteConfirmText('');
+                  setDeleteError(null);
+                }}
+                disabled={isDeleting}
+                className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteCourse}
+                disabled={deleteConfirmText !== course.name || isDeleting}
+                className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Course'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -32,6 +32,17 @@ enum CourseType {
   municipal
 }
 
+enum NineType {
+  front
+  back
+  named
+}
+
+enum CourseSource {
+  seeded
+  user_created
+}
+
 // ============================================================================
 // MODELS
 // ============================================================================
@@ -49,6 +60,7 @@ model User {
   rounds_created   Round[]
   favorite_courses FavoriteCourse[]
   score_edits      ScoreEdit[]
+  created_courses  Course[]         @relation("CreatedCourses")
 
   @@map("users")
 }
@@ -74,30 +86,54 @@ model Player {
 }
 
 model Course {
-  id          String      @id @default(uuid()) @db.Uuid
-  name        String      @db.VarChar(255)
-  city        String      @db.VarChar(100)
-  state       String      @db.VarChar(2)
-  zip_code    String?     @db.VarChar(10)
-  address     String?     @db.VarChar(255)
-  phone       String?     @db.VarChar(20)
-  website     String?     @db.VarChar(255)
-  num_holes   Int         @default(18)
+  id          String       @id @default(uuid()) @db.Uuid
+  name        String       @db.VarChar(255)
+  city        String       @db.VarChar(100)
+  state       String       @db.VarChar(2)
+  zip_code    String?      @db.VarChar(10)
+  address     String?      @db.VarChar(255)
+  phone       String?      @db.VarChar(20)
+  website     String?      @db.VarChar(255)
+  num_holes   Int          @default(18)
   course_type CourseType?
-  latitude    Decimal?    @db.Decimal(10, 7)
-  longitude   Decimal?    @db.Decimal(10, 7)
-  created_at  DateTime    @default(now())
-  updated_at  DateTime    @updatedAt
+  source      CourseSource @default(seeded)
+  created_by  String?      @db.Uuid
+  latitude    Decimal?     @db.Decimal(10, 7)
+  longitude   Decimal?     @db.Decimal(10, 7)
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
 
   // Relations
   tee_sets         TeeSet[]
+  nines            Nine[]
   rounds           Round[]
   players_home     Player[]
   favorite_courses FavoriteCourse[]
+  creator          User?            @relation("CreatedCourses", fields: [created_by], references: [id], onDelete: SetNull)
 
   @@index([state])
   @@index([name])
+  @@index([created_by])
   @@map("courses")
+}
+
+model Nine {
+  id            String   @id @default(uuid()) @db.Uuid
+  course_id     String   @db.Uuid
+  name          String   @db.VarChar(50)
+  nine_type     NineType @default(front)
+  display_order Int      @default(0)
+  created_at    DateTime @default(now())
+
+  // Relations
+  course           Course          @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  holes            Hole[]
+  tee_nine_ratings TeeNineRating[]
+  round_nines      RoundNine[]
+
+  @@unique([course_id, name])
+  @@index([course_id])
+  @@map("nines")
 }
 
 model TeeSet {
@@ -111,28 +147,67 @@ model TeeSet {
   gender        String? @db.VarChar(10)
 
   // Relations
-  course Course  @relation(fields: [course_id], references: [id], onDelete: Cascade)
-  holes  Hole[]
-  rounds Round[]
+  course           Course          @relation(fields: [course_id], references: [id], onDelete: Cascade)
+  holes            Hole[]
+  rounds           Round[]
+  tee_nine_ratings TeeNineRating[]
+  tee_yardages     TeeHoleYardage[]
 
   @@index([course_id])
   @@map("tee_sets")
 }
 
+model TeeNineRating {
+  id            String  @id @default(uuid()) @db.Uuid
+  tee_set_id    String  @db.Uuid
+  nine_id       String  @db.Uuid
+  course_rating Decimal @db.Decimal(4, 1)
+  slope_rating  Int
+
+  // Relations
+  tee_set TeeSet @relation(fields: [tee_set_id], references: [id], onDelete: Cascade)
+  nine    Nine   @relation(fields: [nine_id], references: [id], onDelete: Cascade)
+
+  @@unique([tee_set_id, nine_id])
+  @@index([tee_set_id])
+  @@index([nine_id])
+  @@map("tee_nine_ratings")
+}
+
+model TeeHoleYardage {
+  id         String @id @default(uuid()) @db.Uuid
+  tee_set_id String @db.Uuid
+  hole_id    String @db.Uuid
+  yardage    Int
+
+  // Relations
+  tee_set TeeSet @relation(fields: [tee_set_id], references: [id], onDelete: Cascade)
+  hole    Hole   @relation(fields: [hole_id], references: [id], onDelete: Cascade)
+
+  @@unique([tee_set_id, hole_id])
+  @@index([tee_set_id])
+  @@index([hole_id])
+  @@map("tee_hole_yardages")
+}
+
 model Hole {
-  id             String @id @default(uuid()) @db.Uuid
-  tee_set_id     String @db.Uuid
+  id             String  @id @default(uuid()) @db.Uuid
+  tee_set_id     String? @db.Uuid
+  nine_id        String? @db.Uuid
   hole_number    Int
   par            Int
-  distance       Int
+  distance       Int     @default(0)
   handicap_index Int
 
   // Relations
-  tee_set TeeSet  @relation(fields: [tee_set_id], references: [id], onDelete: Cascade)
-  scores  Score[]
+  tee_set      TeeSet?          @relation(fields: [tee_set_id], references: [id], onDelete: Cascade)
+  nine         Nine?            @relation(fields: [nine_id], references: [id], onDelete: Cascade)
+  scores       Score[]
+  tee_yardages TeeHoleYardage[]
 
   @@unique([tee_set_id, hole_number])
   @@index([tee_set_id])
+  @@index([nine_id])
   @@map("holes")
 }
 
@@ -157,6 +232,7 @@ model Round {
   tee_set       TeeSet        @relation(fields: [tee_set_id], references: [id], onDelete: Restrict)
   creator       User          @relation(fields: [created_by], references: [id], onDelete: Restrict)
   round_players RoundPlayer[]
+  round_nines   RoundNine[]
   score_edits   ScoreEdit[]
 
   @@index([course_id])
@@ -165,6 +241,22 @@ model Round {
   @@index([date_played])
   @@index([status])
   @@map("rounds")
+}
+
+model RoundNine {
+  id         String @id @default(uuid()) @db.Uuid
+  round_id   String @db.Uuid
+  nine_id    String @db.Uuid
+  play_order Int    @default(0)
+
+  // Relations
+  round Round @relation(fields: [round_id], references: [id], onDelete: Cascade)
+  nine  Nine  @relation(fields: [nine_id], references: [id], onDelete: Cascade)
+
+  @@unique([round_id, nine_id])
+  @@index([round_id])
+  @@index([nine_id])
+  @@map("round_nines")
 }
 
 model RoundPlayer {
@@ -188,16 +280,16 @@ model RoundPlayer {
 }
 
 model Score {
-  id                   String   @id @default(uuid()) @db.Uuid
-  round_player_id      String   @db.Uuid
-  hole_id              String   @db.Uuid
-  strokes              Int?
-  putts                Int?
-  fairway_hit          Boolean?
-  green_in_regulation  Boolean?
-  penalties            Int      @default(0)
-  sand_shots           Int      @default(0)
-  notes                String?  @db.VarChar(255)
+  id                  String   @id @default(uuid()) @db.Uuid
+  round_player_id     String   @db.Uuid
+  hole_id             String   @db.Uuid
+  strokes             Int?
+  putts               Int?
+  fairway_hit         Boolean?
+  green_in_regulation Boolean?
+  penalties           Int      @default(0)
+  sand_shots          Int      @default(0)
+  notes               String?  @db.VarChar(255)
 
   // Relations
   round_player RoundPlayer @relation(fields: [round_player_id], references: [id], onDelete: Cascade)
@@ -242,18 +334,18 @@ model FavoriteCourse {
 }
 
 model ScoreEdit {
-  id           String   @id @default(uuid()) @db.Uuid
-  score_id     String   @db.Uuid
-  round_id     String   @db.Uuid
-  edited_by    String   @db.Uuid
-  edited_at    DateTime @default(now())
-  hole_number  Int
-  player_name  String   @db.VarChar(100)
-  old_strokes  Int?
-  new_strokes  Int?
-  old_putts    Int?
-  new_putts    Int?
-  reason       String?  @db.VarChar(255)
+  id          String   @id @default(uuid()) @db.Uuid
+  score_id    String   @db.Uuid
+  round_id    String   @db.Uuid
+  edited_by   String   @db.Uuid
+  edited_at   DateTime @default(now())
+  hole_number Int
+  player_name String   @db.VarChar(100)
+  old_strokes Int?
+  new_strokes Int?
+  old_putts   Int?
+  new_putts   Int?
+  reason      String?  @db.VarChar(255)
 
   // Relations
   score  Score @relation(fields: [score_id], references: [id], onDelete: Cascade)

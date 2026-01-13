@@ -218,30 +218,51 @@ export default function CoursesPage() {
           <h1 className="text-2xl font-display font-bold text-golf-text">Courses</h1>
           <p className="text-gray-600 mt-1">Find and browse golf courses</p>
         </div>
-        <Link
-          href="/courses/favorites"
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <svg
-            className="h-4 w-4 text-red-500"
-            fill="currentColor"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+        <div className="flex items-center gap-3">
+          <Link
+            href="/courses/new"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-600 transition-colors"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-            />
-          </svg>
-          My Favorites
-          {favoriteIds.size > 0 && (
-            <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">
-              {favoriteIds.size}
-            </span>
-          )}
-        </Link>
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Create Course
+          </Link>
+          <Link
+            href="/courses/favorites"
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <svg
+              className="h-4 w-4 text-red-500"
+              fill="currentColor"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+              />
+            </svg>
+            My Favorites
+            {favoriteIds.size > 0 && (
+              <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">
+                {favoriteIds.size}
+              </span>
+            )}
+          </Link>
+        </div>
       </div>
 
       {/* Search and Filters */}

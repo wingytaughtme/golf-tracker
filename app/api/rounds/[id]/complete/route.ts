@@ -2,19 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
-
-// Calculate handicap differential: (Adjusted Gross Score - Course Rating) × 113 / Slope Rating
-function calculateHandicapDifferential(
-  grossScore: number,
-  courseRating: number,
-  slopeRating: number,
-  isNineHole: boolean = false
-): number {
-  // For 9-hole rounds, use half the course rating
-  const adjustedCourseRating = isNineHole ? courseRating / 2 : courseRating;
-  const differential = ((grossScore - adjustedCourseRating) * 113) / slopeRating;
-  return Math.round(differential * 10) / 10; // Round to 1 decimal place
-}
+import {
+  calculateScoreDifferential,
+  calculateNineHoleDifferential,
+  applyEquitableStrokeControl,
+  calculateHandicapIndex,
+  calculatePlayingHandicap,
+  calculateCourseHandicap,
+} from '@/lib/calculations/handicap';
 
 export async function POST(
   request: NextRequest,
@@ -146,10 +141,61 @@ export async function POST(
         (s) => getRelevantHoles(s.hole.hole_number)
       );
 
-      const grossScore = relevantScores.reduce(
+      // Calculate raw gross score
+      const rawGrossScore = relevantScores.reduce(
         (sum, s) => sum + (s.strokes || 0),
         0
       );
+
+      // Get course handicap for ESC calculation
+      // If playing_handicap wasn't set on round, look up player's current handicap
+      // Default to 20 handicap for new players without history
+      const DEFAULT_STARTING_HANDICAP = 20;
+      let courseHandicap: number;
+      if (roundPlayer.playing_handicap !== null) {
+        courseHandicap = Math.round(Number(roundPlayer.playing_handicap));
+      } else {
+        // Look up player's current handicap index
+        const latestHandicap = await prisma.handicapHistory.findFirst({
+          where: { player_id: roundPlayer.player_id },
+          orderBy: { effective_date: 'desc' },
+        });
+        if (latestHandicap) {
+          // Calculate course handicap from handicap index
+          const handicapIndex = Number(latestHandicap.handicap_index);
+          courseHandicap = calculateCourseHandicap(handicapIndex, slopeRating);
+        } else {
+          // No handicap history - use default starting handicap
+          courseHandicap = calculateCourseHandicap(DEFAULT_STARTING_HANDICAP, slopeRating);
+        }
+      }
+
+      // Apply Equitable Stroke Control (ESC) to get adjusted gross score
+      const holeScoresForESC = relevantScores.map((s) => ({
+        strokes: s.strokes || 0,
+        par: s.hole.par,
+      }));
+      const adjustedGrossScore = applyEquitableStrokeControl(holeScoresForESC, courseHandicap);
+
+      // Use adjusted gross for handicap calculation, raw gross for display
+      const grossScore = rawGrossScore;
+
+      // Calculate score differential using WHS formula
+      let scoreDifferential: number;
+      if (isNineHole) {
+        // For 9-hole rounds, calculate 18-hole equivalent differential
+        scoreDifferential = calculateNineHoleDifferential(
+          adjustedGrossScore,
+          courseRating,
+          slopeRating
+        );
+      } else {
+        scoreDifferential = calculateScoreDifferential(
+          adjustedGrossScore,
+          courseRating,
+          slopeRating
+        );
+      }
 
       // For 9-hole rounds, use half the playing handicap
       const adjustedHandicap = isNineHole && roundPlayer.playing_handicap !== null
@@ -163,13 +209,6 @@ export async function POST(
         : null;
 
       const scoreToPar = grossScore - totalPar;
-
-      const handicapDifferential = calculateHandicapDifferential(
-        grossScore,
-        courseRating,
-        slopeRating,
-        isNineHole
-      );
 
       // Calculate front/back nine scores
       const frontNineHoles = round.tee_set.holes.filter((h) => h.hole_number <= 9);
@@ -213,31 +252,74 @@ export async function POST(
         },
       });
 
-      // Create handicap history entry
+      // Fetch player's existing differentials (last 20 rounds)
+      // Only include entries that have a valid differential stored
+      const existingHistory = await prisma.handicapHistory.findMany({
+        where: {
+          player_id: roundPlayer.player_id,
+          calculation_details: {
+            path: ['source'],
+            equals: 'round',
+          },
+        },
+        orderBy: { effective_date: 'desc' },
+        take: 19, // We'll add this round to make 20
+      });
+
+      // Extract differentials from history
+      // IMPORTANT: Only use entries that have an actual differential stored
+      // Do NOT fall back to handicap_index - that's a different value!
+      const existingDifferentials = existingHistory
+        .map((h) => {
+          const details = h.calculation_details as { differential?: number } | null;
+          return details?.differential;
+        })
+        .filter((d): d is number => d !== null && d !== undefined);
+
+      // Add current round's differential
+      const allDifferentials = [scoreDifferential, ...existingDifferentials].slice(0, 20);
+
+      // Calculate new handicap index using WHS formula
+      const newHandicapIndex = calculateHandicapIndex(allDifferentials);
+
+      // Create handicap history entry with the differential
+      // Use the round's date_played as the effective date, not the current date
       await prisma.handicapHistory.create({
         data: {
           player_id: roundPlayer.player_id,
-          handicap_index: handicapDifferential,
-          effective_date: new Date(),
+          handicap_index: newHandicapIndex ?? scoreDifferential,
+          effective_date: round.date_played,
           calculation_details: {
             source: 'round',
             round_id: roundId,
             gross_score: grossScore,
+            adjusted_gross_score: adjustedGrossScore,
             course_rating: courseRating,
             slope_rating: slopeRating,
+            differential: scoreDifferential,
             is_nine_hole: isNineHole,
             nine_hole_type: nineHoleMode,
+            differentials_used: allDifferentials.length,
+            handicap_index: newHandicapIndex,
           },
         },
       });
+
+      // Update player's current handicap if they have one calculated
+      if (newHandicapIndex !== null) {
+        // We could update a current_handicap field on Player if we had one
+        // For now, the most recent handicap_history entry is the current handicap
+      }
 
       playerResults.push({
         playerId: roundPlayer.player_id,
         playerName: roundPlayer.player.name,
         grossScore,
+        adjustedGrossScore,
         netScore,
         scoreToPar,
-        handicapDifferential,
+        scoreDifferential,
+        handicapIndex: newHandicapIndex,
         playingHandicap: roundPlayer.playing_handicap,
         frontNine: {
           score: frontNineScore,

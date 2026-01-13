@@ -206,6 +206,9 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('start_date');
     const endDate = searchParams.get('end_date');
     const courseId = searchParams.get('course_id');
+    const search = searchParams.get('search');
+    const sortBy = searchParams.get('sort_by') || 'date';
+    const sortOrder = searchParams.get('sort_order') || 'desc';
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 100);
     const offset = parseInt(searchParams.get('offset') || '0');
 
@@ -247,6 +250,26 @@ export async function GET(request: NextRequest) {
       where.course_id = courseId;
     }
 
+    // Course name search
+    if (search) {
+      where.course = {
+        name: {
+          contains: search,
+          mode: 'insensitive',
+        },
+      };
+    }
+
+    // Build orderBy clause
+    let orderBy: Prisma.RoundOrderByWithRelationInput[] = [];
+    if (sortBy === 'date') {
+      orderBy = [{ date_played: sortOrder as 'asc' | 'desc' }];
+    } else if (sortBy === 'course') {
+      orderBy = [{ course: { name: sortOrder as 'asc' | 'desc' } }];
+    } else {
+      orderBy = [{ date_played: 'desc' }];
+    }
+
     const total = await prisma.round.count({ where });
 
     const rounds = await prisma.round.findMany({
@@ -267,6 +290,11 @@ export async function GET(request: NextRequest) {
             color: true,
             course_rating: true,
             slope_rating: true,
+            holes: {
+              select: {
+                par: true,
+              },
+            },
           },
         },
         round_players: {
@@ -280,17 +308,43 @@ export async function GET(request: NextRequest) {
           },
         },
       },
-      orderBy: { date_played: 'desc' },
+      orderBy,
       take: limit,
       skip: offset,
     });
 
     // Transform to include computed fields
-    const data = rounds.map((round) => ({
-      ...round,
-      player_count: round.round_players.length,
-      player_names: round.round_players.map((rp: { player: { name: string } }) => rp.player.name),
-    }));
+    const data = rounds.map((round) => {
+      const totalPar = round.tee_set.holes.reduce((sum, h) => sum + h.par, 0);
+      const userScore = round.round_players.find(rp => rp.player_id === userPlayer.id)?.gross_score;
+
+      return {
+        id: round.id,
+        date_played: round.date_played,
+        status: round.status,
+        round_type: round.round_type,
+        weather: round.weather,
+        course: round.course,
+        tee_set: {
+          id: round.tee_set.id,
+          name: round.tee_set.name,
+          color: round.tee_set.color,
+          course_rating: round.tee_set.course_rating,
+          slope_rating: round.tee_set.slope_rating,
+        },
+        total_par: totalPar,
+        round_players: round.round_players.map(rp => ({
+          id: rp.id,
+          player: rp.player,
+          gross_score: rp.gross_score,
+          net_score: rp.net_score,
+        })),
+        player_count: round.round_players.length,
+        player_names: round.round_players.map((rp) => rp.player.name),
+        user_score: userScore,
+        score_vs_par: userScore ? userScore - totalPar : null,
+      };
+    });
 
     return NextResponse.json({
       data,

@@ -196,9 +196,9 @@ export async function POST(
       }
 
       // Recalculate gross scores for affected players
-      const affectedPlayerIds = new Set(
+      const affectedPlayerIds = Array.from(new Set(
         scores.map(s => scoreMap.get(s.scoreId)!.roundPlayerId)
-      );
+      ));
 
       const courseRating = Number(round.tee_set.course_rating);
       const slopeRating = round.tee_set.slope_rating;

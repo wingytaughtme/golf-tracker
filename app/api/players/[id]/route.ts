@@ -191,6 +191,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
           player_id: id,
           handicap_index: handicap,
           effective_date: new Date(),
+          calculation_details: {
+            source: 'manual',
+            reason: 'Manual handicap update',
+            previous_handicap: currentHandicap ? Number(currentHandicap) : null,
+          },
         },
       });
     }

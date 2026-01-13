@@ -132,6 +132,10 @@ export async function POST(request: NextRequest) {
           player_id: player.id,
           handicap_index: handicap,
           effective_date: new Date(),
+          calculation_details: {
+            source: 'manual',
+            reason: 'Initial handicap entry',
+          },
         },
       });
     }

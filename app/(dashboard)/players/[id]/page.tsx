@@ -3,6 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import {
+  StatsCard,
+  StatsCardSkeleton,
+  HandicapChart,
+  HandicapChartSkeleton,
+  ScoringDistributionChart,
+  ScoringDistributionSkeleton,
+  RecentRounds,
+  RecentRoundsSkeleton,
+  CourseBreakdown,
+  CourseBreakdownSkeleton,
+  ScoringByParChart,
+  ScoringByParSkeleton,
+} from '@/components/dashboard';
 
 interface Player {
   id: string;
@@ -12,6 +26,7 @@ interface Player {
   current_handicap?: number | string | null;
   rounds_played: number;
   is_user: boolean;
+  created_at: string;
   home_course?: {
     id: string;
     name: string;
@@ -45,16 +60,139 @@ interface Player {
   }[];
 }
 
+interface PlayerStats {
+  playerId: string;
+  playerName: string;
+  type: string;
+  data: {
+    overall: {
+      totalRounds: number;
+      completedRounds: number;
+      averageGrossScore: number | null;
+      bestRound: {
+        grossScore: number;
+        courseName: string;
+        datePlayed: string;
+        roundId: string;
+      } | null;
+      worstRound: {
+        grossScore: number;
+        courseName: string;
+        datePlayed: string;
+        roundId: string;
+      } | null;
+      currentHandicap: number | null;
+      averageScoreVsPar: number | null;
+      totalHolesPlayed: number;
+    };
+    scoring: {
+      scoringByPar: {
+        par: number;
+        holesPlayed: number;
+        totalStrokes: number;
+        average: number;
+        averageVsPar: number;
+      }[];
+      distribution: {
+        eagles: number;
+        birdies: number;
+        pars: number;
+        bogeys: number;
+        doubleBogeys: number;
+        triplePlus: number;
+        total: number;
+        percentages: {
+          eagles: number;
+          birdies: number;
+          pars: number;
+          bogeys: number;
+          doubleBogeys: number;
+          triplePlus: number;
+        };
+      };
+    };
+    detailed: {
+      fairways: {
+        hit: number;
+        total: number;
+        percentage: number | null;
+      } | null;
+      greensInRegulation: {
+        hit: number;
+        total: number;
+        percentage: number | null;
+      } | null;
+      putting: {
+        totalPutts: number;
+        roundsWithPuttData: number;
+        averagePuttsPerRound: number | null;
+        averagePuttsPerHole: number | null;
+      } | null;
+      scrambling: {
+        successful: number;
+        attempts: number;
+        percentage: number | null;
+      } | null;
+      penalties: {
+        total: number;
+        averagePerRound: number | null;
+      };
+      sandShots: {
+        total: number;
+        averagePerRound: number | null;
+      };
+    };
+    trends: {
+      handicap: {
+        date: string;
+        value: number;
+        roundId: string;
+        courseName: string;
+      }[];
+      scoringAverage: {
+        date: string;
+        value: number;
+        roundId: string;
+        courseName: string;
+      }[];
+      scoreToPar: {
+        date: string;
+        value: number;
+        roundId: string;
+        courseName: string;
+      }[];
+    };
+    courses: {
+      totalCourses: number;
+      courseStats: {
+        courseId: string;
+        courseName: string;
+        city: string;
+        state: string;
+        timesPlayed: number;
+        bestScore: number | null;
+        worstScore: number | null;
+        averageScore: number | null;
+        averageVsPar: number | null;
+        lastPlayed: string | null;
+      }[];
+    };
+  };
+}
+
 export default function PlayerProfilePage() {
   const params = useParams();
   const router = useRouter();
   const playerId = params.id as string;
 
   const [player, setPlayer] = useState<Player | null>(null);
+  const [stats, setStats] = useState<PlayerStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'courses' | 'scoring'>('courses');
 
   // Edit form state
   const [editName, setEditName] = useState('');
@@ -65,6 +203,7 @@ export default function PlayerProfilePage() {
 
   useEffect(() => {
     fetchPlayer();
+    fetchStats();
   }, [playerId]);
 
   async function fetchPlayer() {
@@ -85,6 +224,20 @@ export default function PlayerProfilePage() {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function fetchStats() {
+    try {
+      const response = await fetch(`/api/players/${playerId}/stats`);
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch stats:', err);
+    } finally {
+      setStatsLoading(false);
     }
   }
 
@@ -208,6 +361,11 @@ export default function PlayerProfilePage() {
 
   if (!player) return null;
 
+  const memberSince = new Date(player.created_at).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  });
+
   return (
     <div className="space-y-6">
       {/* Back Link */}
@@ -218,7 +376,7 @@ export default function PlayerProfilePage() {
         Back to Players
       </Link>
 
-      {/* Profile Header */}
+      {/* Header Section */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-6">
           <div className="flex flex-col sm:flex-row gap-6">
@@ -243,10 +401,24 @@ export default function PlayerProfilePage() {
                       </span>
                     )}
                   </div>
-                  {player.email && <p className="text-gray-500 mt-1">{player.email}</p>}
-                  {player.ghin_number && (
-                    <p className="text-gray-500 text-sm mt-1">GHIN: {player.ghin_number}</p>
-                  )}
+
+                  {/* Handicap prominently displayed */}
+                  <div className="flex items-baseline gap-2 mt-2">
+                    <span className="text-4xl font-bold text-primary">
+                      {stats?.data.overall.currentHandicap !== null && stats?.data.overall.currentHandicap !== undefined
+                        ? stats.data.overall.currentHandicap.toFixed(1)
+                        : player.current_handicap !== null && player.current_handicap !== undefined
+                        ? Number(player.current_handicap).toFixed(1)
+                        : '—'}
+                    </span>
+                    <span className="text-gray-500">Handicap Index</span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
+                    <span>{stats?.data.overall.completedRounds ?? player.rounds_played} rounds played</span>
+                    <span>Member since {memberSince}</span>
+                    {player.ghin_number && <span>GHIN: {player.ghin_number}</span>}
+                  </div>
                 </div>
 
                 <div className="flex gap-2">
@@ -262,7 +434,7 @@ export default function PlayerProfilePage() {
                         d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                       />
                     </svg>
-                    Edit
+                    Edit Profile
                   </button>
                   {!player.is_user && (
                     <button
@@ -282,114 +454,160 @@ export default function PlayerProfilePage() {
                   )}
                 </div>
               </div>
-
-              {/* Quick Stats */}
-              <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-gray-100">
-                <div>
-                  <p className="text-sm text-gray-500">Handicap</p>
-                  <p className="text-xl font-semibold text-golf-text">
-                    {player.current_handicap !== null && player.current_handicap !== undefined
-                      ? Number(player.current_handicap).toFixed(1)
-                      : '—'}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Rounds Played</p>
-                  <p className="text-xl font-semibold text-golf-text">{player.rounds_played}</p>
-                </div>
-                {player.stats?.avg_score && (
-                  <div>
-                    <p className="text-sm text-gray-500">Avg Score</p>
-                    <p className="text-xl font-semibold text-golf-text">{player.stats.avg_score}</p>
-                  </div>
-                )}
-                {player.stats?.best_score && (
-                  <div>
-                    <p className="text-sm text-gray-500">Best Score</p>
-                    <p className="text-xl font-semibold text-golf-text">{player.stats.best_score}</p>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Stats Section (Placeholder) */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-golf-text mb-4">Statistics</h2>
-        <div className="text-center py-8 text-gray-500">
-          <svg className="h-12 w-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+      {/* Quick Stats Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {statsLoading ? (
+          <>
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+            <StatsCardSkeleton />
+          </>
+        ) : (
+          <>
+            <StatsCard
+              title="Average Score"
+              value={stats?.data.overall.averageGrossScore?.toFixed(1) ?? null}
+              subtitle={stats?.data.overall.averageScoreVsPar != null
+                ? `${stats.data.overall.averageScoreVsPar > 0 ? '+' : ''}${stats.data.overall.averageScoreVsPar.toFixed(1)} vs par`
+                : undefined}
+              icon={
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              }
             />
-          </svg>
-          <p>Detailed statistics coming soon</p>
-          <p className="text-sm">Play more rounds to see trends and insights</p>
-        </div>
+            <StatsCard
+              title="Best Round"
+              value={stats?.data.overall.bestRound?.grossScore ?? null}
+              subtitle={stats?.data.overall.bestRound?.courseName}
+              icon={
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              }
+            />
+            <StatsCard
+              title="Fairways Hit"
+              value={stats?.data.detailed.fairways?.percentage !== null
+                ? `${stats?.data.detailed.fairways?.percentage}%`
+                : null}
+              subtitle={stats?.data.detailed.fairways
+                ? `${stats.data.detailed.fairways.hit}/${stats.data.detailed.fairways.total}`
+                : 'Not tracked'}
+              icon={
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              }
+            />
+            <StatsCard
+              title="GIR %"
+              value={stats?.data.detailed.greensInRegulation?.percentage !== null
+                ? `${stats?.data.detailed.greensInRegulation?.percentage}%`
+                : null}
+              subtitle={stats?.data.detailed.greensInRegulation
+                ? `${stats.data.detailed.greensInRegulation.hit}/${stats.data.detailed.greensInRegulation.total}`
+                : 'Not tracked'}
+              icon={
+                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              }
+            />
+          </>
+        )}
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid lg:grid-cols-2 gap-6">
+        {statsLoading ? (
+          <>
+            <HandicapChartSkeleton />
+            <ScoringDistributionSkeleton />
+          </>
+        ) : (
+          <>
+            <HandicapChart
+              data={stats?.data.trends.handicap ?? []}
+              title="Handicap Trend"
+            />
+            <ScoringDistributionChart
+              data={stats?.data.scoring.distribution ?? {
+                eagles: 0,
+                birdies: 0,
+                pars: 0,
+                bogeys: 0,
+                doubleBogeys: 0,
+                triplePlus: 0,
+                total: 0,
+                percentages: { eagles: 0, birdies: 0, pars: 0, bogeys: 0, doubleBogeys: 0, triplePlus: 0 }
+              }}
+              title="Scoring Distribution"
+            />
+          </>
+        )}
       </div>
 
       {/* Recent Rounds */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h2 className="text-lg font-semibold text-golf-text mb-4">Recent Rounds</h2>
-        {player.recent_rounds && player.recent_rounds.length > 0 ? (
-          <div className="space-y-3">
-            {player.recent_rounds.map((round) => (
-              <Link
-                key={round.id}
-                href={`/rounds/${round.id}`}
-                className="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium text-golf-text">{round.course.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {round.tee_set.name} Tees &middot;{' '}
-                      {new Date(round.date_played).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    {round.gross_score ? (
-                      <p className="text-lg font-semibold text-golf-text">{round.gross_score}</p>
-                    ) : (
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          round.status === 'in_progress'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {round.status === 'in_progress' ? 'In Progress' : round.status}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8 text-gray-500">
-            <svg className="h-12 w-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-              />
-            </svg>
-            <p>No rounds played yet</p>
-            <Link href="/rounds/new" className="text-primary hover:text-primary-600 font-medium text-sm mt-2 inline-block">
-              Start a round
-            </Link>
-          </div>
-        )}
+      {statsLoading ? (
+        <RecentRoundsSkeleton />
+      ) : (
+        <RecentRounds
+          rounds={(player.recent_rounds ?? []).map(r => ({
+            ...r,
+            par: 72, // Default par, would need to come from API
+          }))}
+          playerId={playerId}
+          title="Recent Rounds"
+        />
+      )}
+
+      {/* Tabs Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="border-b border-gray-100">
+          <nav className="flex">
+            <button
+              onClick={() => setActiveTab('courses')}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'courses'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Course Breakdown
+            </button>
+            <button
+              onClick={() => setActiveTab('scoring')}
+              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                activeTab === 'scoring'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Scoring by Par
+            </button>
+          </nav>
+        </div>
+
+        <div className="p-6">
+          {statsLoading ? (
+            activeTab === 'courses' ? <CourseBreakdownSkeleton /> : <ScoringByParSkeleton />
+          ) : activeTab === 'courses' ? (
+            <CourseBreakdown
+              courses={stats?.data.courses.courseStats ?? []}
+            />
+          ) : (
+            <ScoringByParChart
+              data={stats?.data.scoring.scoringByPar ?? []}
+            />
+          )}
+        </div>
       </div>
 
       {/* Edit Modal */}

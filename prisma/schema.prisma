@@ -45,9 +45,10 @@ model User {
   created_at    DateTime  @default(now())
 
   // Relations
-  players         Player[]
-  rounds_created  Round[]
+  players          Player[]
+  rounds_created   Round[]
   favorite_courses FavoriteCourse[]
+  score_edits      ScoreEdit[]
 
   @@map("users")
 }
@@ -156,6 +157,7 @@ model Round {
   tee_set       TeeSet        @relation(fields: [tee_set_id], references: [id], onDelete: Restrict)
   creator       User          @relation(fields: [created_by], references: [id], onDelete: Restrict)
   round_players RoundPlayer[]
+  score_edits   ScoreEdit[]
 
   @@index([course_id])
   @@index([tee_set_id])
@@ -200,6 +202,7 @@ model Score {
   // Relations
   round_player RoundPlayer @relation(fields: [round_player_id], references: [id], onDelete: Cascade)
   hole         Hole        @relation(fields: [hole_id], references: [id], onDelete: Restrict)
+  edits        ScoreEdit[]
 
   @@unique([round_player_id, hole_id])
   @@index([round_player_id])
@@ -236,4 +239,30 @@ model FavoriteCourse {
   @@index([user_id])
   @@index([course_id])
   @@map("favorite_courses")
+}
+
+model ScoreEdit {
+  id           String   @id @default(uuid()) @db.Uuid
+  score_id     String   @db.Uuid
+  round_id     String   @db.Uuid
+  edited_by    String   @db.Uuid
+  edited_at    DateTime @default(now())
+  hole_number  Int
+  player_name  String   @db.VarChar(100)
+  old_strokes  Int?
+  new_strokes  Int?
+  old_putts    Int?
+  new_putts    Int?
+  reason       String?  @db.VarChar(255)
+
+  // Relations
+  score  Score @relation(fields: [score_id], references: [id], onDelete: Cascade)
+  round  Round @relation(fields: [round_id], references: [id], onDelete: Cascade)
+  editor User  @relation(fields: [edited_by], references: [id], onDelete: Restrict)
+
+  @@index([score_id])
+  @@index([round_id])
+  @@index([edited_by])
+  @@index([edited_at])
+  @@map("score_edits")
 }

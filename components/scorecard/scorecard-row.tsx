@@ -29,132 +29,139 @@ export default function ScorecardRow({
   labelClassName = '',
   compactMode = false,
 }: ScorecardRowProps) {
+  // Birdie Book theme - consistent cream background for all rows
   const getRowStyles = () => {
     switch (type) {
       case 'hole':
-        return 'bg-gray-900 text-white font-bold';
+        return 'bg-cream-200';
       case 'hdcp':
-        return 'bg-gray-100 text-gray-600 text-xs';
+        return 'bg-cream-200';
       case 'yards':
-        return 'bg-blue-50 text-blue-900';
+        return 'bg-cream-200';
       case 'par':
-        return 'bg-green-50 text-green-900 font-semibold';
+        return 'bg-cream-200';
       case 'player':
-        return 'bg-white hover:bg-gray-50';
+        return 'bg-cream-200';
       default:
-        return 'bg-gray-50';
+        return 'bg-cream-200';
     }
   };
 
   const getCellStyles = (isTotal: boolean = false) => {
-    // Use larger touch targets in compact mode
-    const size = compactMode ? 'w-9 h-11 min-w-[36px]' : 'w-10 h-10';
-    const base = `${size} flex items-center justify-center font-mono text-sm border-r border-gray-200 last:border-r-0`;
+    const size = compactMode ? 'w-10 h-12 min-w-[40px]' : 'w-12 h-12 min-w-[48px]';
+    const base = `${size} flex items-center justify-center font-mono text-sm border-r border-card-border/50 last:border-r-0 overflow-hidden`;
 
     if (isTotal) {
-      switch (type) {
-        case 'hole':
-          return `${base} bg-gray-800 font-bold`;
-        case 'par':
-          return `${base} bg-green-100 font-bold`;
-        case 'yards':
-          return `${base} bg-blue-100 font-bold`;
-        case 'player':
-          return `${base} bg-gray-100 font-bold`;
-        default:
-          return `${base} bg-gray-200 font-bold`;
-      }
+      // OUT/IN columns - slightly highlighted
+      return `${base} bg-cream-300/70 font-bold`;
     }
 
     return base;
   };
 
   const getGrandTotalStyles = () => {
-    const size = compactMode ? 'w-11 h-11 min-w-[44px]' : 'w-12 h-10';
+    const size = compactMode ? 'w-14 h-12 min-w-[56px]' : 'w-16 h-12 min-w-[64px]';
     const base = `${size} flex items-center justify-center font-mono text-sm font-bold`;
 
-    switch (type) {
-      case 'hole':
-        return `${base} bg-gray-900 text-white`;
-      case 'par':
-        return `${base} bg-green-200 text-green-900`;
-      case 'yards':
-        return `${base} bg-blue-200 text-blue-900`;
-      case 'player':
-        return `${base} bg-gray-200 text-gray-900`;
-      default:
-        return `${base} bg-gray-300`;
-    }
+    // TOTAL column - same background as OUT/IN columns
+    return `${base} bg-cream-300/70`;
   };
 
   const getLabelStyles = () => {
-    const width = compactMode ? 'w-20 min-w-[80px]' : 'w-24 min-w-[96px]';
-    const height = type === 'player' ? 'min-h-10' : (compactMode ? 'h-11' : 'h-10');
-    const base = `${width} ${height} flex items-center px-2 font-semibold text-sm border-r border-gray-300 flex-shrink-0`;
+    // flex-1 allows the label column to grow and fill remaining space
+    const width = compactMode ? 'min-w-[80px] flex-1' : 'min-w-[96px] flex-1';
+    const height = type === 'player' ? 'min-h-12' : 'h-12';
+    const base = `${width} ${height} flex items-center px-3 font-mono font-semibold text-sm border-r border-card-border bg-cream-200`;
 
     switch (type) {
       case 'hole':
-        return `${base} bg-gray-900 text-white`;
+        return `${base} text-charcoal`;
       case 'hdcp':
-        return `${base} bg-gray-100 text-gray-600 text-xs font-normal`;
+        return `${base} text-charcoal`;
       case 'yards':
-        return `${base} bg-blue-50 text-blue-900`;
+        return `${base} text-charcoal`;
       case 'par':
-        return `${base} bg-green-50 text-green-900`;
+        return `${base} text-charcoal`;
       case 'player':
-        return `${base} bg-white text-gray-900 py-1.5 leading-tight`;
+        return `${base} text-charcoal py-1.5 leading-tight`;
       default:
-        return `${base} bg-gray-50`;
+        return `${base}`;
     }
   };
 
-  // For player names, allow wrapping instead of truncating
-  const displayLabel = label;
+  // Render hole number as green circle badge
+  const renderHoleNumber = (num: string | number | ReactNode) => {
+    if (type !== 'hole') return num;
+
+    // If it's already a ReactNode (not a plain number), just return it
+    if (typeof num !== 'number' && typeof num !== 'string') return num;
+
+    return (
+      <span className="w-7 h-7 flex items-center justify-center bg-[#D3B57E] text-[#2C3E2D] text-xs font-bold rounded-full">
+        {num}
+      </span>
+    );
+  };
+
+  // Render OUT/IN/TOTAL labels for hole row
+  const renderTotalLabel = (content: string | number | ReactNode, isGrand: boolean = false) => {
+    if (type !== 'hole') return content;
+
+    if (typeof content === 'string' && ['OUT', 'IN', 'TOT', 'TOTAL'].includes(content)) {
+      return (
+        <span className={`font-bold text-charcoal ${isGrand ? 'text-sm' : 'text-xs'}`}>
+          {content}
+        </span>
+      );
+    }
+
+    return content;
+  };
 
   return (
-    <div className={`flex ${getRowStyles()} border-b border-gray-200 ${className}`}>
+    <div className={`flex ${getRowStyles()} border-b border-card-border ${className}`}>
       {/* Label Column */}
       <div
         className={`${getLabelStyles()} ${labelClassName}`}
         title={label}
       >
-        <span className={type === 'player' ? 'break-words line-clamp-2' : ''}>
-          {displayLabel}
+        <span className={type === 'player' ? 'break-words line-clamp-2 uppercase text-xs' : 'uppercase tracking-wide text-xs'}>
+          {label}
         </span>
       </div>
 
       {/* Front Nine */}
       {frontNine && frontNine.map((cell, index) => (
         <div key={`front-${index}`} className={getCellStyles()}>
-          {cell}
+          {renderHoleNumber(cell)}
         </div>
       ))}
 
       {/* OUT (Front Nine Total) */}
       {frontTotal !== undefined && (
         <div className={getCellStyles(true)}>
-          {frontTotal}
+          {renderTotalLabel(frontTotal)}
         </div>
       )}
 
       {/* Back Nine */}
       {backNine && backNine.map((cell, index) => (
         <div key={`back-${index}`} className={getCellStyles()}>
-          {cell}
+          {renderHoleNumber(cell)}
         </div>
       ))}
 
       {/* IN (Back Nine Total) */}
       {backTotal !== undefined && (
         <div className={getCellStyles(true)}>
-          {backTotal}
+          {renderTotalLabel(backTotal)}
         </div>
       )}
 
       {/* TOT (Grand Total) */}
       {grandTotal !== undefined && (
         <div className={getGrandTotalStyles()}>
-          {grandTotal}
+          {renderTotalLabel(grandTotal, true)}
         </div>
       )}
     </div>

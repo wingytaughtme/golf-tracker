@@ -250,12 +250,21 @@ The scorecard MUST look like a real golf scorecard:
 (Same layout continues for holes 10-18 with IN and TOTAL columns)
 ```
 
-**Score Display Conventions (IMPORTANT):**
-- Eagle or better: Circle the score (gold/yellow background)
-- Birdie: Circle the score (green background or green circle)
-- Par: No decoration (neutral)
-- Bogey: Square around score (light red/pink background)
-- Double bogey+: Double square (darker red background)
+**Score Display Conventions (FINALIZED - Birdie Book Theme):**
+
+Traditional golf scorecard shapes:
+- **Eagle (-2 or better):** Hunter Green circle (`#355E3B`) with double-ring effect (white gap + green outer ring)
+- **Birdie (-1):** Hunter Green circle (`#355E3B`), solid
+- **Par:** No decoration, transparent background, forest green text (`#2C3E2D`)
+- **Bogey (+1):** Champagne Gold square (`#E8D9B5`), forest green text
+- **Double Bogey (+2):** Deep Burgundy square (`#8C3A3A`), white text
+- **Triple+ (+3 or more):** Deep Burgundy square (`#8C3A3A`) with double-ring effect (white gap + burgundy outer ring)
+
+Key design principles:
+- Circles for under-par (good), Squares for over-par (bad)
+- Double rings for exceptional scores (very good or very bad)
+- Labels (Eagle, Birdie, Par, Bogey, Double, Triple+) appear below the score pill
+- See `theme/[round_detail_scorecard_view].md` for complete CSS specifications
 
 **Interaction Requirements:**
 - Tap/click a score cell to edit
@@ -426,22 +435,31 @@ Maximum score per hole based on course handicap:
 
 ## UI/UX Design Guidelines
 
-### Color Palette
+### Color Palette (Birdie Book Theme - FINALIZED)
 ```
-Primary:      #1B4D3E (Forest Green - golf course inspired)
-Secondary:    #2D5A27 (Fairway Green)
-Accent:       #C5A572 (Sand/Gold - bunker inspired)
-Background:   #F5F5F0 (Off-white - scorecard paper)
-Text:         #1A1A1A (Near black)
-Success:      #228B22 (Green - birdie)
-Warning:      #DAA520 (Gold - eagle)
-Error:        #CD5C5C (Indian Red - bogey+)
+Primary:      #1E4D3B (Deep Hunter Green - brand color)
+Secondary:    #D4AF6A (Champagne Gold - accent color)
+Accent:       #B59A58 (Muted Gold - borders)
+
+Background:   #FAF8F2 (Cream/Ivory - page background)
+Card:         #FDFBF7 (Lighter Cream - surfaces)
+
+Text:         #1C1C1C (Charcoal Black)
+Muted:        #5D5D5D (Dark Gray)
+
+Score Colors:
+  Eagle/Birdie: #355E3B (Hunter Green)
+  Par Text:     #2C3E2D (Forest Green)
+  Bogey:        #E8D9B5 (Champagne Gold)
+  Double/Triple: #8C3A3A (Deep Burgundy)
 ```
 
-### Typography
-- Headers: "Roboto Slab" or similar slab-serif (classic scorecard feel)
-- Body: "Inter" or "Open Sans" (clean, readable)
-- Scorecard numbers: Monospace or tabular figures
+Full color definitions are in `tailwind.config.ts` and `theme/[round_detail_scorecard_view].md`.
+
+### Typography (Birdie Book Theme - FINALIZED)
+- Headers: "Playfair Display" serif (`font-serif`) - elegant, premium feel
+- Body: "Inter" sans-serif (`font-sans`) - clean, readable
+- Scorecard numbers: Monospace (`font-mono`) - tabular alignment
 
 ### Mobile-First Requirements
 - Touch targets minimum 44x44px

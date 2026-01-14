@@ -12,6 +12,9 @@ interface Hole {
   par: number;
   distance: number;
   handicap_index: number;
+  display_number?: number;
+  nine_index?: number;
+  nine_name?: string;
 }
 
 interface Score {
@@ -21,6 +24,7 @@ interface Score {
   fairway_hit: boolean | null;
   green_in_regulation: boolean | null;
   hole: {
+    id: string;
     hole_number: number;
     par: number;
   };
@@ -63,6 +67,7 @@ interface ScorecardProps {
   weather?: string | null;
   temperature?: number | null;
   isEditable?: boolean;
+  showDetailedStats?: boolean;
 }
 
 export default function Scorecard({
@@ -75,6 +80,7 @@ export default function Scorecard({
   weather,
   temperature,
   isEditable = false,
+  showDetailedStats = false,
 }: ScorecardProps) {
   const {
     isDirty,
@@ -136,7 +142,7 @@ export default function Scorecard({
         return (
           <>
             <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full" />
-            <span className="text-gray-600">Saving...</span>
+            <span className="text-muted">Saving...</span>
           </>
         );
 
@@ -144,7 +150,7 @@ export default function Scorecard({
         return (
           <>
             <svg
-              className="h-4 w-4 text-green-500"
+              className="h-4 w-4 text-score-birdie"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -156,7 +162,7 @@ export default function Scorecard({
                 d="M5 13l4 4L19 7"
               />
             </svg>
-            <span className="text-green-600">Saved {formatLastSaved()}</span>
+            <span className="text-score-birdie">Saved {formatLastSaved()}</span>
           </>
         );
 
@@ -164,7 +170,7 @@ export default function Scorecard({
         return (
           <>
             <svg
-              className="h-4 w-4 text-red-500"
+              className="h-4 w-4 text-score-triple"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -176,10 +182,10 @@ export default function Scorecard({
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <span className="text-red-600">{saveError || 'Save failed'}</span>
+            <span className="text-score-triple">{saveError || 'Save failed'}</span>
             <button
               onClick={saveNow}
-              className="ml-2 text-xs text-primary hover:text-primary-600 font-medium"
+              className="ml-2 text-xs text-secondary hover:text-secondary-600 font-medium"
             >
               Retry
             </button>
@@ -190,7 +196,7 @@ export default function Scorecard({
         return (
           <>
             <svg
-              className="h-4 w-4 text-amber-500"
+              className="h-4 w-4 text-score-bogey"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -202,7 +208,7 @@ export default function Scorecard({
                 d="M18.364 5.636a9 9 0 010 12.728m0 0l-2.829-2.829m2.829 2.829L21 21M15.536 8.464a5 5 0 010 7.072m0 0l-2.829-2.829m-4.243 2.829a4.978 4.978 0 01-1.414-2.83m-1.414 5.658a9 9 0 01-2.167-9.238m7.824 2.167a1 1 0 111.414 1.414m-1.414-1.414L3 3m8.293 8.293l1.414 1.414"
               />
             </svg>
-            <span className="text-amber-600">Offline - changes saved locally</span>
+            <span className="text-score-bogey">Offline - changes saved locally</span>
           </>
         );
 
@@ -211,33 +217,52 @@ export default function Scorecard({
         if (isDirty) {
           return (
             <>
-              <div className="h-2 w-2 rounded-full bg-amber-400 animate-pulse" />
-              <span className="text-amber-600">Unsaved changes</span>
+              <div className="h-2 w-2 rounded-full bg-score-bogey animate-pulse" />
+              <span className="text-score-bogey">Unsaved changes</span>
             </>
           );
         }
         if (lastSaved) {
           return (
             <>
-              <div className="h-2 w-2 rounded-full bg-green-400" />
-              <span className="text-gray-500">Saved {formatLastSaved()}</span>
+              <div className="h-2 w-2 rounded-full bg-score-birdie" />
+              <span className="text-muted">Saved {formatLastSaved()}</span>
             </>
           );
         }
         return (
           <>
-            <div className="h-2 w-2 rounded-full bg-gray-300" />
-            <span className="text-gray-500">Tap a cell to enter score</span>
+            <div className="h-2 w-2 rounded-full bg-cream-400" />
+            <span className="text-muted">Tap a cell to enter score</span>
           </>
         );
     }
   };
 
   // Force re-render when scores change (for save status updates)
-  const scoreKeys = Object.keys(scores);
+  const _scoreKeys = Object.keys(scores);
+  void _scoreKeys; // Intentional: triggers re-render
+
+  // Calculate player totals and stats for summary cards
+  const getPlayerStats = (roundPlayer: RoundPlayer) => {
+    const playerScores = roundPlayer.scores || [];
+    const completedScores = playerScores.filter(s => s.strokes !== null);
+    const grossScore = completedScores.reduce((sum, s) => sum + (s.strokes || 0), 0);
+    const totalPar = completedScores.reduce((sum, s) => sum + (s.hole?.par || 0), 0);
+    const vsPar = grossScore - totalPar;
+
+    return {
+      grossScore: completedScores.length > 0 ? grossScore : null,
+      vsPar: completedScores.length > 0 ? vsPar : null,
+      playingHandicap: roundPlayer.playing_handicap,
+      netScore: roundPlayer.playing_handicap && completedScores.length > 0
+        ? grossScore - Math.round(roundPlayer.playing_handicap)
+        : null,
+    };
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="bg-cream rounded-xl shadow-lg overflow-hidden">
       {/* Header with course info */}
       <ScorecardHeader
         courseName={course.name}
@@ -253,7 +278,7 @@ export default function Scorecard({
 
       {/* Save Status Bar (only in edit mode) */}
       {isEditable && (
-        <div className="bg-gray-50 px-4 py-2 border-b border-gray-200 flex items-center justify-between">
+        <div className="bg-cream-300 px-4 py-2 border-b border-card-border flex items-center justify-between">
           <div className="flex items-center gap-2 text-sm">
             {renderSaveStatus()}
           </div>
@@ -267,7 +292,7 @@ export default function Scorecard({
                 flex items-center gap-1.5
                 ${gridMode
                   ? 'bg-primary text-white shadow-sm'
-                  : 'text-gray-600 bg-white border border-gray-300 hover:bg-gray-50'
+                  : 'text-muted bg-card border border-card-border hover:bg-cream-200'
                 }
               `}
             >
@@ -293,7 +318,7 @@ export default function Scorecard({
 
       {/* Grid Mode Instructions */}
       {isEditable && gridMode && (
-        <div className="bg-blue-50 px-4 py-2 border-b border-blue-100 text-sm text-blue-700">
+        <div className="bg-secondary/10 px-4 py-2 border-b border-secondary/20 text-sm text-secondary-700">
           <span className="font-medium">Quick Entry Mode:</span>
           {' '}Type numbers directly, use Tab/Enter or Arrow keys to navigate. Changes save automatically.
         </div>
@@ -307,36 +332,92 @@ export default function Scorecard({
         teeSetName={teeSet.name}
         isEditable={isEditable}
         gridMode={gridMode}
-        onGridModeChange={setGridMode}
+        showDetailedStats={showDetailedStats}
       />
 
-      {/* Legend */}
-      <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
-        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">
-          <span className="font-semibold">Score Legend:</span>
-          <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center text-amber-900 font-bold text-xs shadow-sm">2</div>
-            <span>Eagle+</span>
+      {/* Player Summary Cards */}
+      {!isEditable && roundPlayers.length > 0 && (
+        <div className="px-4 py-4 bg-cream-200 border-t border-card-border">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {roundPlayers.map((roundPlayer) => {
+              const stats = getPlayerStats(roundPlayer);
+              const initials = roundPlayer.player.name
+                .split(' ')
+                .map(n => n[0])
+                .join('')
+                .toUpperCase()
+                .slice(0, 2);
+
+              return (
+                <div
+                  key={roundPlayer.id}
+                  className="bg-card rounded-lg border-2 border-secondary/30 p-3 flex items-center gap-3"
+                >
+                  {/* Avatar */}
+                  <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-charcoal font-bold text-lg flex-shrink-0">
+                    {initials}
+                  </div>
+
+                  {/* Player Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-charcoal truncate">{roundPlayer.player.name}</p>
+                    {stats.playingHandicap !== null && (
+                      <p className="text-xs text-muted">HCP: {Number(stats.playingHandicap).toFixed(1)}</p>
+                    )}
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex items-center gap-4 text-center">
+                    <div>
+                      <p className="text-xs text-muted">Gross</p>
+                      <p className="text-lg font-bold text-charcoal">
+                        {stats.grossScore ?? '-'}
+                      </p>
+                    </div>
+                    {stats.netScore !== null && (
+                      <div>
+                        <p className="text-xs text-muted">Net</p>
+                        <p className="text-lg font-bold text-charcoal">
+                          {stats.netScore}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-xs text-muted">vs Par</p>
+                      <p className={`text-lg font-bold ${
+                        stats.vsPar === null ? 'text-muted' :
+                        stats.vsPar === 0 ? 'text-charcoal' :
+                        stats.vsPar < 0 ? 'text-score-birdie' : 'text-score-bogey'
+                      }`}>
+                        {stats.vsPar === null ? '-' :
+                         stats.vsPar === 0 ? 'E' :
+                         stats.vsPar > 0 ? `+${stats.vsPar}` : stats.vsPar}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">3</div>
-            <span>Birdie</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-5 h-5 bg-white flex items-center justify-center font-bold text-xs text-gray-800">4</div>
-            <span>Par</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-5 h-5 bg-red-50 border-2 border-red-400 flex items-center justify-center font-bold text-xs text-red-700">5</div>
-            <span>Bogey</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-5 h-5 bg-red-100 border-2 border-red-500 ring-2 ring-red-500 ring-offset-1 flex items-center justify-center font-bold text-xs text-red-800">6</div>
-            <span>Double</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-5 h-5 bg-red-700 flex items-center justify-center font-bold text-xs text-white">7</div>
-            <span>Triple+</span>
+        </div>
+      )}
+
+      {/* Score Summary Row */}
+      <div className="bg-cream-300 px-4 py-3 border-t border-card-border">
+        <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
+          <div className="flex items-center gap-6">
+            <div>
+              <span className="text-muted">Total Par:</span>
+              <span className="ml-2 font-bold text-charcoal">{holes.reduce((sum, h) => sum + h.par, 0)}</span>
+            </div>
+            <div>
+              <span className="text-muted">Total Yards:</span>
+              <span className="ml-2 font-bold text-charcoal">{holes.reduce((sum, h) => sum + h.distance, 0).toLocaleString()}</span>
+            </div>
+            <div>
+              <span className="text-muted">Rating/Slope:</span>
+              <span className="ml-2 font-bold text-charcoal">{teeSet.course_rating} / {teeSet.slope_rating}</span>
+            </div>
           </div>
         </div>
       </div>

@@ -15,6 +15,9 @@ interface ScoreCellProps {
   playerName?: string;
   className?: string;
   isCurrentHole?: boolean;
+  showDetailedStats?: boolean;
+  // New prop for compact mode (no labels)
+  compact?: boolean;
 }
 
 export default function ScoreCell({
@@ -28,6 +31,8 @@ export default function ScoreCell({
   playerName,
   className = '',
   isCurrentHole = false,
+  showDetailedStats = false,
+  compact = false,
 }: ScoreCellProps) {
   const [showInput, setShowInput] = useState(false);
   const [inputPosition, setInputPosition] = useState({ top: 0, left: 0 });
@@ -38,7 +43,15 @@ export default function ScoreCell({
     setFocusedCell,
     navigateToCell,
     updateScore,
+    getScore,
   } = useScorecardStore();
+
+  // Get detailed stats for this cell
+  const scoreEntry = roundPlayerId && holeNumber ? getScore(roundPlayerId, holeNumber) : null;
+  const putts = scoreEntry?.current.putts ?? null;
+  const fairwayHit = scoreEntry?.current.fairway_hit ?? null;
+  const gir = scoreEntry?.current.green_in_regulation ?? null;
+  const hasDetailedStats = putts !== null || fairwayHit !== null || gir !== null;
 
   // Check if this cell is focused
   const isFocused = isInteractive &&
@@ -117,85 +130,215 @@ export default function ScoreCell({
     }
   };
 
-  // Determine score styling based on relation to par
+  // Calculate diff for styling
+  const diff = value !== null ? value - par : null;
+
+  // Get score styling based on relation to par - Birdie Book theme
+  // Traditional golf scoring: Circles for under par, Squares for over par
+  // Colors: Hunter Green (#355E3B) for good, Champagne Gold (#F7E7CE) for bad
   const getScoreStyle = () => {
     if (value === null) {
-      return isCurrentHole ? 'bg-amber-50 text-gray-400' : 'bg-gray-50 text-gray-400';
+      return {
+        bg: isCurrentHole ? 'bg-secondary/10' : 'bg-transparent',
+        text: 'text-muted',
+        label: null,
+        shape: 'none' as const,
+        border: '',
+      };
     }
 
     if (isTotal) {
-      return 'bg-gray-900 text-white font-bold';
+      return {
+        bg: 'bg-cream-400',
+        text: 'text-charcoal font-bold',
+        label: null,
+        shape: 'none' as const,
+        border: '',
+      };
     }
 
     if (isSubtotal) {
-      return 'bg-gray-200 text-gray-900 font-bold';
+      return {
+        bg: 'bg-cream-300',
+        text: 'text-charcoal font-semibold',
+        label: null,
+        shape: 'none' as const,
+        border: '',
+      };
     }
 
-    const diff = value - par;
-
-    if (diff <= -2) {
-      // Eagle or better - gold/yellow circle
-      return 'bg-amber-400 text-amber-900 rounded-full shadow-sm';
-    } else if (diff === -1) {
-      // Birdie - green circle
-      return 'bg-green-500 text-white rounded-full shadow-sm';
-    } else if (diff === 0) {
-      // Par - neutral
-      return isCurrentHole ? 'bg-amber-50 text-gray-800' : 'bg-white text-gray-800';
-    } else if (diff === 1) {
-      // Bogey - square with single border
-      return 'bg-red-50 text-red-700 border-2 border-red-400';
-    } else if (diff === 2) {
-      // Double bogey - square with double border effect
-      return 'bg-red-100 text-red-800 border-2 border-red-500 ring-2 ring-red-500 ring-offset-1';
-    } else {
-      // Triple bogey or worse - filled dark
-      return 'bg-red-700 text-white';
+    // Score-based styling with traditional golf shapes
+    // Under par = Circle (rounded-full), Over par = Square (rounded-sm)
+    // Eagle = Double ring (green), Triple+ = Double ring (burgundy)
+    // Colors: Hunter Green (#355E3B), Champagne Gold (#F7E7CE), Deep Burgundy (#8C3A3A)
+    if (diff !== null) {
+      if (diff <= -2) {
+        // Eagle or better - Green circle with "double ring" effect
+        // Green fill + White gap + Green ring (like a "double birdie")
+        return {
+          bg: 'bg-[#355E3B]',
+          text: 'text-white font-bold',
+          label: 'Eagle',
+          shape: 'circle' as const,
+          border: 'border-2 border-white ring-2 ring-[#355E3B]',
+        };
+      } else if (diff === -1) {
+        // Birdie - Green circle (solid, no border)
+        return {
+          bg: 'bg-[#355E3B]',
+          text: 'text-white font-bold',
+          label: 'Birdie',
+          shape: 'circle' as const,
+          border: '',
+        };
+      } else if (diff === 0) {
+        // Par - No shape, transparent background
+        return {
+          bg: isCurrentHole ? 'bg-[#B59A58]/20' : 'bg-transparent',
+          text: 'text-[#2C3E2D] font-bold',
+          label: 'Par',
+          shape: 'none' as const,
+          border: '',
+        };
+      } else if (diff === 1) {
+        // Bogey - Gold square (solid, no border)
+        return {
+          bg: 'bg-[#E8D9B5]',
+          text: 'text-[#2C3E2D] font-bold',
+          label: 'Bogey',
+          shape: 'square' as const,
+          border: '',
+        };
+      } else if (diff === 2) {
+        // Double Bogey - Deep Burgundy square (solid, no border)
+        return {
+          bg: 'bg-[#8C3A3A]',
+          text: 'text-white font-bold',
+          label: 'Double',
+          shape: 'square' as const,
+          border: '',
+        };
+      } else {
+        // Triple+ (diff >= 3) - Deep Burgundy square with "double ring" effect
+        // Burgundy fill + White gap + Burgundy ring
+        return {
+          bg: 'bg-[#8C3A3A]',
+          text: 'text-white font-bold',
+          label: 'Triple+',
+          shape: 'square' as const,
+          border: 'border-2 border-white ring-2 ring-[#8C3A3A]',
+        };
+      }
     }
+
+    return {
+      bg: 'bg-transparent',
+      text: 'text-muted',
+      label: null,
+      shape: 'none' as const,
+      border: '',
+    };
   };
 
-  const baseClasses = `
-    w-8 h-8 flex items-center justify-center
-    font-mono text-sm font-semibold
-    transition-all duration-200 ease-out
-  `;
+  const style = getScoreStyle();
+  const showLabel = !compact && !isTotal && !isSubtotal && value !== null && style.label;
 
   const interactiveClasses = isInteractive && !isTotal && !isSubtotal
-    ? 'cursor-pointer hover:ring-2 hover:ring-primary hover:ring-offset-1 active:scale-95'
+    ? 'cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-1 active:scale-95 focus:outline-none'
     : '';
 
   const focusClasses = isFocused
-    ? 'ring-2 ring-primary ring-offset-2 z-10'
+    ? 'ring-2 ring-secondary ring-offset-2 z-10'
     : '';
 
   const currentHoleClasses = isCurrentHole && !isFocused && !isTotal && !isSubtotal
-    ? 'ring-2 ring-amber-300 ring-offset-1'
+    ? 'ring-2 ring-secondary/50 ring-offset-1'
     : '';
+
+  // Get shape class based on score type
+  const getShapeClass = () => {
+    switch (style.shape) {
+      case 'circle':
+        return 'rounded-full';
+      case 'square':
+        return 'rounded-sm';
+      default:
+        return '';
+    }
+  };
+
+  // Show fairway stat only for par 4s and 5s
+  const showFairwayStat = par > 3;
 
   return (
     <>
-      <div
-        ref={cellRef}
-        onClick={handleClick}
-        onKeyDown={handleKeyDown}
-        onFocus={handleFocus}
-        className={`
-          ${baseClasses}
-          ${getScoreStyle()}
-          ${interactiveClasses}
-          ${focusClasses}
-          ${currentHoleClasses}
-          ${className}
-        `.trim()}
-        role={isInteractive ? 'button' : undefined}
-        tabIndex={isInteractive && !isTotal && !isSubtotal ? 0 : undefined}
-        aria-label={
-          isInteractive && playerName && holeNumber
-            ? `${playerName}, hole ${holeNumber}, ${value !== null ? `score ${value}` : 'no score'}`
-            : undefined
-        }
-      >
-        {value !== null ? value : '-'}
+      <div className="relative flex flex-col items-center">
+        {/* Score Cell - Shape based on score type */}
+        <div
+          ref={cellRef}
+          onClick={handleClick}
+          onKeyDown={handleKeyDown}
+          onFocus={handleFocus}
+          className={`
+            flex items-center justify-center
+            w-[26px] h-[26px]
+            ${getShapeClass()}
+            transition-all duration-200 ease-out
+            ${style.bg}
+            ${style.text}
+            ${style.border}
+            ${interactiveClasses}
+            ${focusClasses}
+            ${currentHoleClasses}
+            ${className}
+          `.trim()}
+          role={isInteractive ? 'button' : undefined}
+          tabIndex={isInteractive && !isTotal && !isSubtotal ? 0 : undefined}
+          aria-label={
+            isInteractive && playerName && holeNumber
+              ? `${playerName}, hole ${holeNumber}, ${value !== null ? `score ${value}` : 'no score'}`
+              : undefined
+          }
+        >
+          {/* Score Number */}
+          <span className="text-sm font-mono leading-none">
+            {value !== null ? value : '-'}
+          </span>
+        </div>
+
+        {/* Score Label (Birdie, Par, etc.) - outside pill with regular background */}
+        {showLabel && (
+          <span className="text-[9px] leading-none mt-1 font-medium text-charcoal">
+            {style.label}
+          </span>
+        )}
+
+        {/* Detailed Stats Indicators */}
+        {showDetailedStats && hasDetailedStats && !isTotal && !isSubtotal && (
+          <div className="flex items-center gap-0.5 mt-0.5 h-3">
+            {putts !== null && (
+              <span className="text-[9px] font-medium text-blue-600 bg-blue-50 rounded px-0.5" title={`${putts} putt${putts !== 1 ? 's' : ''}`}>
+                {putts}P
+              </span>
+            )}
+            {showFairwayStat && fairwayHit !== null && (
+              <span
+                className={`text-[9px] rounded px-0.5 ${fairwayHit ? 'text-green-600 bg-green-50' : 'text-red-500 bg-red-50'}`}
+                title={fairwayHit ? 'Fairway hit' : 'Fairway missed'}
+              >
+                F{fairwayHit ? '✓' : '✗'}
+              </span>
+            )}
+            {gir !== null && (
+              <span
+                className={`text-[9px] rounded px-0.5 ${gir ? 'text-emerald-600 bg-emerald-50' : 'text-red-500 bg-red-50'}`}
+                title={gir ? 'Green in regulation' : 'Missed GIR'}
+              >
+                G{gir ? '✓' : '✗'}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Score Input Popover */}
@@ -207,6 +350,7 @@ export default function ScoreCell({
           playerName={playerName}
           onClose={() => setShowInput(false)}
           position={inputPosition}
+          showDetailedStats={showDetailedStats}
         />
       )}
     </>

@@ -54,17 +54,17 @@ const config: Config = {
         // Text colors
         charcoal: '#1C1C1C',
         muted: '#5D5D5D',
-        // Golf score colors
+        // Golf score colors (Birdie Book theme)
         score: {
-          eagle: '#D4AF6A',
-          birdie: '#2E7D32',
-          par: '#E0D8C8',
-          bogey: '#F9A825',
-          'bogey-light': '#FFE082',
-          double: '#E65100',
-          'double-light': '#FFCC80',
-          triple: '#C62828',
-          'triple-light': '#D6A8A8',
+          eagle: '#355E3B',         // Hunter Green (same as birdie)
+          birdie: '#355E3B',        // Hunter Green
+          par: '#E0D8C8',           // Beige (unchanged)
+          bogey: '#E8D9B5',         // Champagne Gold
+          'bogey-light': '#F5EDD8', // Lighter Champagne
+          double: '#8C3A3A',        // Deep Burgundy
+          'double-light': '#C4A3A3', // Lighter Burgundy
+          triple: '#8C3A3A',        // Deep Burgundy (same as double)
+          'triple-light': '#C4A3A3', // Lighter Burgundy
         },
         // Status colors
         status: {
@@ -75,15 +75,15 @@ const config: Config = {
           error: '#FFCDD2',
           'error-text': '#C62828',
         },
-        // Legacy golf colors for backwards compatibility
+        // Legacy golf colors (updated to Birdie Book theme)
         golf: {
           background: '#FAF8F2',
           text: '#1C1C1C',
-          birdie: '#2E7D32',
-          eagle: '#D4AF6A',
-          bogey: '#F9A825',
-          double: '#E65100',
-          triple: '#C62828',
+          birdie: '#355E3B',        // Hunter Green
+          eagle: '#355E3B',         // Hunter Green (same as birdie)
+          bogey: '#E8D9B5',         // Champagne Gold
+          double: '#8C3A3A',        // Deep Burgundy
+          triple: '#8C3A3A',        // Deep Burgundy (same as double)
           par: '#E0D8C8',
         },
       },

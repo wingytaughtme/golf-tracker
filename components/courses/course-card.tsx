@@ -18,10 +18,10 @@ interface CourseCardProps {
 }
 
 const courseTypeBadgeColors: Record<string, string> = {
-  public: 'bg-blue-100 text-blue-800',
-  private: 'bg-purple-100 text-purple-800',
-  resort: 'bg-amber-100 text-amber-800',
-  municipal: 'bg-green-100 text-green-800',
+  public: 'bg-secondary/20 text-secondary-700',
+  private: 'bg-primary/10 text-primary',
+  resort: 'bg-score-bogey/20 text-score-bogey',
+  municipal: 'bg-score-birdie/20 text-score-birdie',
 };
 
 export default function CourseCard({ course, isFavorite = false, onFavoriteChange }: CourseCardProps) {
@@ -70,12 +70,12 @@ export default function CourseCard({ course, isFavorite = false, onFavoriteChang
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 overflow-hidden">
+    <div className="card hover:shadow-md transition-all duration-200 overflow-hidden">
       <div className="p-5">
         <div className="flex justify-between items-start gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-semibold text-golf-text truncate">{course.name}</h3>
-            <p className="text-gray-600 text-sm mt-1">
+            <h3 className="text-lg font-semibold text-charcoal truncate">{course.name}</h3>
+            <p className="text-muted text-sm mt-1">
               {course.city}, {course.state}
             </p>
           </div>
@@ -86,8 +86,8 @@ export default function CourseCard({ course, isFavorite = false, onFavoriteChang
               isToggling ? 'opacity-50 cursor-wait' : ''
             } ${
               favorite
-                ? 'text-red-500 hover:bg-red-50'
-                : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                ? 'text-secondary hover:bg-secondary/10'
+                : 'text-muted hover:bg-cream-300 hover:text-charcoal'
             }`}
             aria-label={favorite ? 'Remove from favorites' : 'Add to favorites'}
             title={error || (favorite ? 'Remove from favorites' : 'Add to favorites')}
@@ -109,30 +109,30 @@ export default function CourseCard({ course, isFavorite = false, onFavoriteChang
         </div>
 
         {error && (
-          <p className="text-red-500 text-xs mt-2">{error}</p>
+          <p className="text-score-triple text-xs mt-2">{error}</p>
         )}
 
         <div className="flex flex-wrap items-center gap-2 mt-4">
           {course.course_type && (
             <span
               className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${
-                courseTypeBadgeColors[course.course_type] || 'bg-gray-100 text-gray-800'
+                courseTypeBadgeColors[course.course_type] || 'bg-cream-300 text-charcoal'
               }`}
             >
               {course.course_type}
             </span>
           )}
-          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-cream-300 text-muted">
             {course.num_holes} holes
           </span>
           {course.tee_set_count > 0 && (
-            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+            <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-cream-300 text-muted">
               {course.tee_set_count} tee{course.tee_set_count !== 1 ? 's' : ''}
             </span>
           )}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-gray-100">
+        <div className="mt-4 pt-4 border-t border-card-border">
           <Link
             href={`/courses/${course.id}`}
             className="inline-flex items-center justify-center w-full px-4 py-2.5 text-sm font-medium text-primary bg-primary/5 rounded-lg hover:bg-primary/10 transition-colors"

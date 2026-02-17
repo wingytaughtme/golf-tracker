@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
 import {
   calculateScoreDifferential,
   calculateNineHoleDifferential,
   applyEquitableStrokeControl,
   calculateHandicapIndex,
-  calculatePlayingHandicap,
   calculateCourseHandicap,
 } from '@/lib/calculations/handicap';
 
@@ -16,14 +14,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id: roundId } = await params;
 
@@ -43,9 +35,17 @@ export async function POST(
       where: { id: roundId },
       include: {
         course: true,
-        tee_set: {
+        tee_set: true,
+        round_nines: {
+          orderBy: { play_order: 'asc' },
           include: {
-            holes: true,
+            nine: {
+              include: {
+                holes: {
+                  orderBy: { hole_number: 'asc' },
+                },
+              },
+            },
           },
         },
         round_players: {
@@ -93,20 +93,30 @@ export async function POST(
       );
     }
 
+    // Extract holes from round_nines in play order
+    const allHoles = round.round_nines.flatMap((rn) => rn.nine.holes);
+    const allHoleIds = new Set(allHoles.map((h) => h.id));
+
     // Validate scores are entered for the selected holes
-    const totalHoles = round.tee_set.holes.length;
+    const totalHoles = allHoles.length;
     const requiredHoles = isNineHole ? 9 : totalHoles;
 
+    // Get holes by nine position (first nine vs second nine)
+    const firstNineHoles = round.round_nines[0]?.nine.holes || [];
+    const secondNineHoles = round.round_nines[1]?.nine.holes || [];
+    const firstNineHoleIds = new Set(firstNineHoles.map((h) => h.id));
+    const secondNineHoleIds = new Set(secondNineHoles.map((h) => h.id));
+
     // Determine which holes to validate based on mode
-    const getRelevantHoles = (holeNumber: number) => {
-      if (!isNineHole) return true;
-      if (nineHoleMode === 'front') return holeNumber <= 9;
-      return holeNumber > 9;
+    const getRelevantHoles = (holeId: string) => {
+      if (!isNineHole) return allHoleIds.has(holeId);
+      if (nineHoleMode === 'front') return firstNineHoleIds.has(holeId);
+      return secondNineHoleIds.has(holeId);
     };
 
     for (const roundPlayer of round.round_players) {
       const completedScores = roundPlayer.scores.filter(
-        (s) => s.strokes !== null && getRelevantHoles(s.hole.hole_number)
+        (s) => s.strokes !== null && getRelevantHoles(s.hole.id)
       );
 
       if (completedScores.length < requiredHoles) {
@@ -130,7 +140,7 @@ export async function POST(
     const slopeRating = round.tee_set.slope_rating;
 
     // Get holes for the selected nine (or all holes for full round)
-    const relevantHoles = round.tee_set.holes.filter((h) => getRelevantHoles(h.hole_number));
+    const relevantHoles = allHoles.filter((h) => getRelevantHoles(h.id));
     const totalPar = relevantHoles.reduce((sum, h) => sum + h.par, 0);
 
     const playerResults = [];
@@ -138,7 +148,7 @@ export async function POST(
     for (const roundPlayer of round.round_players) {
       // Only count scores from relevant holes
       const relevantScores = roundPlayer.scores.filter(
-        (s) => getRelevantHoles(s.hole.hole_number)
+        (s) => getRelevantHoles(s.hole.id)
       );
 
       // Calculate raw gross score
@@ -210,20 +220,17 @@ export async function POST(
 
       const scoreToPar = grossScore - totalPar;
 
-      // Calculate front/back nine scores
-      const frontNineHoles = round.tee_set.holes.filter((h) => h.hole_number <= 9);
-      const backNineHoles = round.tee_set.holes.filter((h) => h.hole_number > 9);
-
-      const frontNineScore = roundPlayer.scores
-        .filter((s) => s.hole.hole_number <= 9)
+      // Calculate first/second nine scores (based on round_nines play order)
+      const firstNineScore = roundPlayer.scores
+        .filter((s) => firstNineHoleIds.has(s.hole.id))
         .reduce((sum, s) => sum + (s.strokes || 0), 0);
 
-      const backNineScore = roundPlayer.scores
-        .filter((s) => s.hole.hole_number > 9)
+      const secondNineScore = roundPlayer.scores
+        .filter((s) => secondNineHoleIds.has(s.hole.id))
         .reduce((sum, s) => sum + (s.strokes || 0), 0);
 
-      const frontNinePar = frontNineHoles.reduce((sum, h) => sum + h.par, 0);
-      const backNinePar = backNineHoles.reduce((sum, h) => sum + h.par, 0);
+      const firstNinePar = firstNineHoles.reduce((sum, h) => sum + h.par, 0);
+      const secondNinePar = secondNineHoles.reduce((sum, h) => sum + h.par, 0);
 
       // Find best and worst holes (only from relevant scores)
       const holesWithDiff = relevantScores.map((s) => ({
@@ -284,10 +291,14 @@ export async function POST(
 
       // Create handicap history entry with the differential
       // Use the round's date_played as the effective date, not the current date
+      // IMPORTANT: Only store an actual handicap_index if we have enough rounds to calculate one (3+)
+      // This prevents raw differentials from being displayed as handicap indices
       await prisma.handicapHistory.create({
         data: {
           player_id: roundPlayer.player_id,
-          handicap_index: newHandicapIndex ?? scoreDifferential,
+          // Store 0 if no handicap calculated yet - the calculation_details.handicap_index has the real value
+          // We use 0 instead of null because handicap_index is required in the schema
+          handicap_index: newHandicapIndex ?? 0,
           effective_date: round.date_played,
           calculation_details: {
             source: 'round',
@@ -300,6 +311,7 @@ export async function POST(
             is_nine_hole: isNineHole,
             nine_hole_type: nineHoleMode,
             differentials_used: allDifferentials.length,
+            // This is the REAL handicap index (null if < 3 rounds)
             handicap_index: newHandicapIndex,
           },
         },
@@ -322,14 +334,16 @@ export async function POST(
         handicapIndex: newHandicapIndex,
         playingHandicap: roundPlayer.playing_handicap,
         frontNine: {
-          score: frontNineScore,
-          par: frontNinePar,
-          toPar: frontNineScore - frontNinePar,
+          score: firstNineScore,
+          par: firstNinePar,
+          toPar: firstNineScore - firstNinePar,
+          name: round.round_nines[0]?.nine.name || 'Front',
         },
         backNine: {
-          score: backNineScore,
-          par: backNinePar,
-          toPar: backNineScore - backNinePar,
+          score: secondNineScore,
+          par: secondNinePar,
+          toPar: secondNineScore - secondNinePar,
+          name: round.round_nines[1]?.nine.name || 'Back',
         },
         stats: {
           birdiesOrBetter,

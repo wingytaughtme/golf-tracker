@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
 import {
   calculateHandicapIndex,
   calculateCourseHandicap,
@@ -37,14 +36,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id: playerId } = await params;
     const { searchParams } = new URL(request.url);
@@ -167,10 +160,19 @@ export async function GET(
     const currentHandicapIndex = calculateHandicapIndex(rawDifferentials.slice(0, 20));
 
     // Get the most recent handicap history entry (may include manual adjustments)
+    // IMPORTANT: Use the calculated handicap_index from calculation_details, not the DB field
+    // The DB field might be 0 for early rounds before 3 differentials were accumulated
     const mostRecentEntry = handicapHistory[0];
-    const displayHandicapIndex = mostRecentEntry
-      ? Number(mostRecentEntry.handicap_index)
-      : currentHandicapIndex;
+    let displayHandicapIndex: number | null = null;
+    if (mostRecentEntry) {
+      const details = mostRecentEntry.calculation_details as { handicap_index?: number | null } | null;
+      // Use the calculated value from details, fall back to DB field only if details is missing
+      displayHandicapIndex = details?.handicap_index ?? (
+        Number(mostRecentEntry.handicap_index) !== 0 ? Number(mostRecentEntry.handicap_index) : null
+      );
+    }
+    // If no valid handicap from history, use the freshly calculated one
+    displayHandicapIndex = displayHandicapIndex ?? currentHandicapIndex;
 
     // Calculate statistics
     const differentialsUsed = getDifferentialsUsedCount(rawDifferentials.length);
@@ -294,14 +296,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id: playerId } = await params;
     const body = await request.json();
@@ -325,12 +321,22 @@ export async function POST(
       );
     }
 
-    // Get the tee set with course info
+    // Get the tee set with course info and nines (for hole pars)
     const teeSet = await prisma.teeSet.findUnique({
       where: { id: body.teeSetId },
       include: {
-        course: true,
-        holes: true,
+        course: {
+          include: {
+            nines: {
+              orderBy: { display_order: 'asc' },
+              include: {
+                holes: {
+                  select: { par: true },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -386,7 +392,9 @@ export async function POST(
 
     const courseRating = Number(teeSet.course_rating);
     const slopeRating = teeSet.slope_rating;
-    const totalPar = teeSet.holes.reduce((sum, h) => sum + h.par, 0);
+    // Get total par from all nines on the course
+    const allHoles = teeSet.course.nines.flatMap((n) => n.holes);
+    const totalPar = allHoles.reduce((sum, h) => sum + h.par, 0);
 
     // Calculate course and playing handicaps
     const courseHandicap = calculateCourseHandicap(handicapIndex, slopeRating);

@@ -14,19 +14,19 @@ interface StatsCardProps {
 
 export function StatsCard({ title, value, subtitle, icon, trend, className = '' }: StatsCardProps) {
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-5 ${className}`}>
+    <div className={`card p-5 ${className}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <p className="text-2xl font-bold text-golf-text mt-1">
+          <p className="text-sm font-medium text-muted">{title}</p>
+          <p className="text-2xl font-bold text-charcoal mt-1">
             {value !== null && value !== undefined ? value : '—'}
           </p>
           {subtitle && (
-            <p className="text-sm text-gray-500 mt-1">{subtitle}</p>
+            <p className="text-sm text-muted mt-1">{subtitle}</p>
           )}
           {trend && (
             <div className={`flex items-center gap-1 mt-2 text-sm ${
-              trend.isPositive ? 'text-green-600' : 'text-red-600'
+              trend.isPositive ? 'text-score-birdie' : 'text-score-triple'
             }`}>
               <svg
                 className={`w-4 h-4 ${trend.isPositive ? '' : 'rotate-180'}`}
@@ -41,7 +41,7 @@ export function StatsCard({ title, value, subtitle, icon, trend, className = '' 
           )}
         </div>
         {icon && (
-          <div className="flex-shrink-0 p-2 bg-primary/10 rounded-lg text-primary">
+          <div className="flex-shrink-0 p-2 bg-secondary/20 rounded-lg text-secondary-700">
             {icon}
           </div>
         )}
@@ -56,13 +56,13 @@ interface StatsCardSkeletonProps {
 
 export function StatsCardSkeleton({ className = '' }: StatsCardSkeletonProps) {
   return (
-    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 p-5 animate-pulse ${className}`}>
+    <div className={`card p-5 animate-pulse ${className}`}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <div className="h-4 bg-gray-200 rounded w-20 mb-2"></div>
-          <div className="h-8 bg-gray-200 rounded w-16"></div>
+          <div className="h-4 bg-cream-300 rounded w-20 mb-2"></div>
+          <div className="h-8 bg-cream-300 rounded w-16"></div>
         </div>
-        <div className="h-10 w-10 bg-gray-200 rounded-lg"></div>
+        <div className="h-10 w-10 bg-cream-300 rounded-lg"></div>
       </div>
     </div>
   );

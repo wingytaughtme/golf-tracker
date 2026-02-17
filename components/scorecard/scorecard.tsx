@@ -243,24 +243,6 @@ export default function Scorecard({
   const _scoreKeys = Object.keys(scores);
   void _scoreKeys; // Intentional: triggers re-render
 
-  // Calculate player totals and stats for summary cards
-  const getPlayerStats = (roundPlayer: RoundPlayer) => {
-    const playerScores = roundPlayer.scores || [];
-    const completedScores = playerScores.filter(s => s.strokes !== null);
-    const grossScore = completedScores.reduce((sum, s) => sum + (s.strokes || 0), 0);
-    const totalPar = completedScores.reduce((sum, s) => sum + (s.hole?.par || 0), 0);
-    const vsPar = grossScore - totalPar;
-
-    return {
-      grossScore: completedScores.length > 0 ? grossScore : null,
-      vsPar: completedScores.length > 0 ? vsPar : null,
-      playingHandicap: roundPlayer.playing_handicap,
-      netScore: roundPlayer.playing_handicap && completedScores.length > 0
-        ? grossScore - Math.round(roundPlayer.playing_handicap)
-        : null,
-    };
-  };
-
   return (
     <div className="bg-cream rounded-xl shadow-lg overflow-hidden">
       {/* Header with course info */}
@@ -335,92 +317,6 @@ export default function Scorecard({
         showDetailedStats={showDetailedStats}
       />
 
-      {/* Player Summary Cards */}
-      {!isEditable && roundPlayers.length > 0 && (
-        <div className="px-4 py-4 bg-cream-200 border-t border-card-border">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            {roundPlayers.map((roundPlayer) => {
-              const stats = getPlayerStats(roundPlayer);
-              const initials = roundPlayer.player.name
-                .split(' ')
-                .map(n => n[0])
-                .join('')
-                .toUpperCase()
-                .slice(0, 2);
-
-              return (
-                <div
-                  key={roundPlayer.id}
-                  className="bg-card rounded-lg border-2 border-secondary/30 p-3 flex items-center gap-3"
-                >
-                  {/* Avatar */}
-                  <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center text-charcoal font-bold text-lg flex-shrink-0">
-                    {initials}
-                  </div>
-
-                  {/* Player Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-charcoal truncate">{roundPlayer.player.name}</p>
-                    {stats.playingHandicap !== null && (
-                      <p className="text-xs text-muted">HCP: {Number(stats.playingHandicap).toFixed(1)}</p>
-                    )}
-                  </div>
-
-                  {/* Stats */}
-                  <div className="flex items-center gap-4 text-center">
-                    <div>
-                      <p className="text-xs text-muted">Gross</p>
-                      <p className="text-lg font-bold text-charcoal">
-                        {stats.grossScore ?? '-'}
-                      </p>
-                    </div>
-                    {stats.netScore !== null && (
-                      <div>
-                        <p className="text-xs text-muted">Net</p>
-                        <p className="text-lg font-bold text-charcoal">
-                          {stats.netScore}
-                        </p>
-                      </div>
-                    )}
-                    <div>
-                      <p className="text-xs text-muted">vs Par</p>
-                      <p className={`text-lg font-bold ${
-                        stats.vsPar === null ? 'text-muted' :
-                        stats.vsPar === 0 ? 'text-charcoal' :
-                        stats.vsPar < 0 ? 'text-score-birdie' : 'text-score-bogey'
-                      }`}>
-                        {stats.vsPar === null ? '-' :
-                         stats.vsPar === 0 ? 'E' :
-                         stats.vsPar > 0 ? `+${stats.vsPar}` : stats.vsPar}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Score Summary Row */}
-      <div className="bg-cream-300 px-4 py-3 border-t border-card-border">
-        <div className="flex flex-wrap items-center justify-between gap-4 text-sm">
-          <div className="flex items-center gap-6">
-            <div>
-              <span className="text-muted">Total Par:</span>
-              <span className="ml-2 font-bold text-charcoal">{holes.reduce((sum, h) => sum + h.par, 0)}</span>
-            </div>
-            <div>
-              <span className="text-muted">Total Yards:</span>
-              <span className="ml-2 font-bold text-charcoal">{holes.reduce((sum, h) => sum + h.distance, 0).toLocaleString()}</span>
-            </div>
-            <div>
-              <span className="text-muted">Rating/Slope:</span>
-              <span className="ml-2 font-bold text-charcoal">{teeSet.course_rating} / {teeSet.slope_rating}</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

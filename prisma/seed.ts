@@ -1,75 +1,136 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { allCourses, CourseData } from './data';
+import { allCourses, personalCourses, CourseData } from './data';
 
 const prisma = new PrismaClient();
 
-async function seedCourse(courseData: CourseData) {
-  // Create the course
-  const course = await prisma.course.create({
-    data: {
+async function seedCourse(courseData: CourseData): Promise<{ id: string; name: string; created: boolean }> {
+  // Idempotent: find existing course by name + city + state
+  let course = await prisma.course.findFirst({
+    where: {
       name: courseData.name,
       city: courseData.city,
       state: courseData.state,
-      zip_code: courseData.zip_code,
-      address: courseData.address,
-      phone: courseData.phone,
-      website: courseData.website,
-      num_holes: courseData.num_holes,
-      course_type: courseData.course_type,
-      latitude: courseData.latitude,
-      longitude: courseData.longitude,
     },
+    include: { tee_sets: true },
   });
 
-  // Create tee sets and holes for each tee set
-  for (const teeSetData of courseData.tee_sets) {
-    const teeSet = await prisma.teeSet.create({
-      data: {
-        course_id: course.id,
-        name: teeSetData.name,
-        color: teeSetData.color,
-        course_rating: teeSetData.course_rating,
-        slope_rating: teeSetData.slope_rating,
-        total_yardage: teeSetData.total_yardage,
-        gender: teeSetData.gender,
-      },
-    });
+  const courseFields = {
+    name: courseData.name,
+    city: courseData.city,
+    state: courseData.state,
+    zip_code: courseData.zip_code,
+    address: courseData.address,
+    phone: courseData.phone,
+    website: courseData.website,
+    num_holes: courseData.num_holes,
+    course_type: courseData.course_type,
+    latitude: courseData.latitude,
+    longitude: courseData.longitude,
+    source: 'seeded' as const,
+  };
 
-    // Create holes for this tee set
-    await prisma.hole.createMany({
-      data: teeSetData.holes.map(hole => ({
-        tee_set_id: teeSet.id,
-        hole_number: hole.hole_number,
-        par: hole.par,
-        distance: hole.distance,
-        handicap_index: hole.handicap_index,
-      })),
+  const isNew = !course;
+
+  if (course) {
+    // Update existing course metadata
+    course = await prisma.course.update({
+      where: { id: course.id },
+      data: courseFields,
+      include: { tee_sets: true },
+    });
+  } else {
+    // Create new course
+    course = await prisma.course.create({
+      data: courseFields,
+      include: { tee_sets: true },
     });
   }
 
-  return course;
-}
+  // Seed tee sets and holes
+  for (const teeSetData of courseData.tee_sets) {
+    const existingTee = course.tee_sets.find(
+      t => t.name === teeSetData.name && t.gender === teeSetData.gender
+    );
 
-async function main() {
-  console.log('Seeding database with 25 golf courses...\n');
+    let teeSetId: string;
 
-  // Seed all courses
-  const courses: { id: string; name: string }[] = [];
+    if (existingTee) {
+      // Update existing tee set ratings/yardage
+      await prisma.teeSet.update({
+        where: { id: existingTee.id },
+        data: {
+          color: teeSetData.color,
+          course_rating: teeSetData.course_rating,
+          slope_rating: teeSetData.slope_rating,
+          total_yardage: teeSetData.total_yardage,
+        },
+      });
+      teeSetId = existingTee.id;
 
-  for (const courseData of allCourses) {
-    try {
-      const course = await seedCourse(courseData);
-      courses.push({ id: course.id, name: course.name });
-      console.log(`  ✓ ${course.name}`);
-    } catch (error) {
-      console.error(`  ✗ Failed to seed ${courseData.name}:`, error);
+      // Upsert holes for existing tee set (safe even if rounds reference these holes)
+      for (const h of teeSetData.holes) {
+        await prisma.hole.upsert({
+          where: {
+            tee_set_id_hole_number: {
+              tee_set_id: teeSetId,
+              hole_number: h.hole_number,
+            },
+          },
+          update: {
+            par: h.par,
+            distance: h.distance,
+            handicap_index: h.handicap_index,
+          },
+          create: {
+            tee_set_id: teeSetId,
+            hole_number: h.hole_number,
+            par: h.par,
+            distance: h.distance,
+            handicap_index: h.handicap_index,
+          },
+        });
+      }
+    } else {
+      // Create new tee set + bulk create holes
+      const teeSet = await prisma.teeSet.create({
+        data: {
+          course_id: course.id,
+          name: teeSetData.name,
+          color: teeSetData.color,
+          course_rating: teeSetData.course_rating,
+          slope_rating: teeSetData.slope_rating,
+          total_yardage: teeSetData.total_yardage,
+          gender: teeSetData.gender,
+        },
+      });
+      teeSetId = teeSet.id;
+
+      await prisma.hole.createMany({
+        data: teeSetData.holes.map(h => ({
+          tee_set_id: teeSetId,
+          hole_number: h.hole_number,
+          par: h.par,
+          distance: h.distance,
+          handicap_index: h.handicap_index,
+        })),
+      });
     }
   }
 
-  console.log(`\nCreated ${courses.length} courses with tee sets and holes.`);
+  return { id: course.id, name: course.name, created: isNew };
+}
 
-  // Create a demo user
+async function seedDemoUser(courses: { id: string; name: string }[]) {
+  // Idempotent: check if demo user exists
+  const existing = await prisma.user.findUnique({
+    where: { email: 'demo@example.com' },
+  });
+  if (existing) {
+    console.log('\n  Demo user already exists, skipping demo data.');
+    return;
+  }
+
   const hashedPassword = await bcrypt.hash('demo1234', 12);
   const demoUser = await prisma.user.create({
     data: {
@@ -79,12 +140,8 @@ async function main() {
     },
   });
 
-  console.log('\nCreated demo user: demo@example.com / demo1234');
-
-  // Get Pebble Beach for the demo player's home course
   const pebbleBeach = courses.find(c => c.name.includes('Pebble Beach'));
 
-  // Create player for demo user
   const demoPlayer = await prisma.player.create({
     data: {
       user_id: demoUser.id,
@@ -95,44 +152,19 @@ async function main() {
     },
   });
 
-  // Create some additional players (friends to play with)
   const player2 = await prisma.player.create({
-    data: {
-      name: 'John Smith',
-      email: 'john@example.com',
-      ghin_number: '2345678',
-    },
+    data: { name: 'John Smith', email: 'john@example.com', ghin_number: '2345678' },
   });
 
-  const player3 = await prisma.player.create({
-    data: {
-      name: 'Mike Johnson',
-      email: 'mike@example.com',
-      ghin_number: '3456789',
-    },
-  });
+  console.log('\n  Created demo user: demo@example.com / demo1234');
+  console.log('  Created 3 players');
 
-  const player4 = await prisma.player.create({
-    data: {
-      name: 'Sarah Williams',
-      email: 'sarah@example.com',
-      ghin_number: '4567890',
-    },
-  });
-
-  console.log('Created 4 players');
-
-  // Get Pebble Beach Blue tees for sample round
   if (pebbleBeach) {
     const pebbleBlue = await prisma.teeSet.findFirst({
-      where: {
-        course_id: pebbleBeach.id,
-        name: 'Blue',
-      },
+      where: { course_id: pebbleBeach.id, name: 'Blue' },
     });
 
     if (pebbleBlue) {
-      // Create a completed round
       const completedRound = await prisma.round.create({
         data: {
           course_id: pebbleBeach.id,
@@ -149,7 +181,6 @@ async function main() {
         },
       });
 
-      // Add players to the round
       const roundPlayer1 = await prisma.roundPlayer.create({
         data: {
           round_id: completedRound.id,
@@ -161,7 +192,7 @@ async function main() {
         },
       });
 
-      const roundPlayer2 = await prisma.roundPlayer.create({
+      await prisma.roundPlayer.create({
         data: {
           round_id: completedRound.id,
           player_id: player2.id,
@@ -172,14 +203,12 @@ async function main() {
         },
       });
 
-      // Get holes for scoring
       const holes = await prisma.hole.findMany({
         where: { tee_set_id: pebbleBlue.id },
         orderBy: { hole_number: 'asc' },
       });
 
-      // Create scores for demo player
-      const demoScores = [5, 6, 4, 4, 3, 6, 3, 5, 5, 5, 4, 4, 5, 6, 4, 5, 3, 6]; // Total: 85
+      const demoScores = [5, 6, 4, 4, 3, 6, 3, 5, 5, 5, 4, 4, 5, 6, 4, 5, 3, 6];
       for (let i = 0; i < holes.length; i++) {
         await prisma.score.create({
           data: {
@@ -194,70 +223,76 @@ async function main() {
         });
       }
 
-      console.log('Created sample round with scores');
+      console.log('  Created sample round with scores');
     }
 
-    // Add handicap history
     await prisma.handicapHistory.createMany({
       data: [
-        {
-          player_id: demoPlayer.id,
-          handicap_index: 14.2,
-          effective_date: new Date('2024-11-01'),
-        },
-        {
-          player_id: demoPlayer.id,
-          handicap_index: 13.5,
-          effective_date: new Date('2024-12-01'),
-        },
-        {
-          player_id: demoPlayer.id,
-          handicap_index: 12.5,
-          effective_date: new Date('2024-12-15'),
-        },
+        { player_id: demoPlayer.id, handicap_index: 14.2, effective_date: new Date('2024-11-01') },
+        { player_id: demoPlayer.id, handicap_index: 13.5, effective_date: new Date('2024-12-01') },
+        { player_id: demoPlayer.id, handicap_index: 12.5, effective_date: new Date('2024-12-15') },
       ],
     });
 
-    console.log('Created handicap history');
+    console.log('  Created handicap history');
+  }
+}
 
-    // Add favorite courses
-    const torrey = courses.find(c => c.name.includes('Torrey Pines'));
-    const bethpage = courses.find(c => c.name.includes('Bethpage'));
+async function main() {
+  const personalOnly = process.env.SEED_PERSONAL_ONLY === 'true';
+  const skipDemo = process.env.SEED_SKIP_DEMO === 'true' || personalOnly;
+  const coursesToSeed = personalOnly ? personalCourses : allCourses;
 
-    const favoriteCourseData = [
-      { user_id: demoUser.id, course_id: pebbleBeach.id },
-    ];
+  console.log(`Seeding ${coursesToSeed.length} courses${personalOnly ? ' (personal only)' : ''}...\n`);
 
-    if (torrey) favoriteCourseData.push({ user_id: demoUser.id, course_id: torrey.id });
-    if (bethpage) favoriteCourseData.push({ user_id: demoUser.id, course_id: bethpage.id });
+  let created = 0;
+  let updated = 0;
+  const courses: { id: string; name: string }[] = [];
 
-    await prisma.favoriteCourse.createMany({
-      data: favoriteCourseData,
-    });
+  for (const courseData of coursesToSeed) {
+    try {
+      const result = await seedCourse(courseData);
+      courses.push({ id: result.id, name: result.name });
+      if (result.created) {
+        created++;
+        console.log(`  + ${result.name}`);
+      } else {
+        updated++;
+        console.log(`  ~ ${result.name} (updated)`);
+      }
+    } catch (error) {
+      console.error(`  ✗ Failed to seed ${courseData.name}:`, error);
+    }
+  }
 
-    console.log('Created favorite courses');
+  console.log(`\nCourses: ${created} created, ${updated} updated (${courses.length} total).`);
+
+  if (!skipDemo) {
+    await seedDemoUser(courses);
   }
 
   // Summary
   console.log('\n========================================');
   console.log('Database seeded successfully!');
   console.log('========================================');
-  console.log('\nCourses by state:');
 
   const stateCount: Record<string, number> = {};
-  allCourses.forEach(c => {
+  coursesToSeed.forEach(c => {
     stateCount[c.state] = (stateCount[c.state] || 0) + 1;
   });
 
+  console.log('\nCourses by state:');
   Object.entries(stateCount)
     .sort((a, b) => b[1] - a[1])
     .forEach(([state, count]) => {
       console.log(`  ${state}: ${count} course(s)`);
     });
 
-  console.log('\nDemo credentials:');
-  console.log('  Email: demo@example.com');
-  console.log('  Password: demo1234');
+  if (!skipDemo) {
+    console.log('\nDemo credentials:');
+    console.log('  Email: demo@example.com');
+    console.log('  Password: demo1234');
+  }
 }
 
 main()

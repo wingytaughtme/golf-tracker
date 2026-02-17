@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
 
 interface ScoreUpdate {
   scoreId: string;
@@ -17,14 +16,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error } = await requireAuth();
+    if (error) return error;
 
     const { id: roundId } = await params;
     const body = await request.json();
@@ -163,14 +156,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error } = await requireAuth();
+    if (error) return error;
 
     const { id: roundId } = await params;
     const body = await request.json();
@@ -265,9 +252,24 @@ export async function PATCH(
           },
         },
         tee_set: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            course_rating: true,
+            slope_rating: true,
+            total_yardage: true,
+          },
+        },
+        round_nines: {
+          orderBy: { play_order: 'asc' },
           include: {
-            holes: {
-              orderBy: { hole_number: 'asc' },
+            nine: {
+              include: {
+                holes: {
+                  orderBy: { hole_number: 'asc' },
+                },
+              },
             },
           },
         },
@@ -320,13 +322,24 @@ export async function PATCH(
       };
     });
 
+    // Extract holes from round_nines with display numbers
+    let displayNumber = 0;
+    const holes = updatedRound?.round_nines.flatMap((rn, nineIndex) =>
+      rn.nine.holes.map((hole) => ({
+        ...hole,
+        display_number: ++displayNumber,
+        nine_index: nineIndex,
+        nine_name: rn.nine.name,
+      }))
+    ) || [];
+
     return NextResponse.json({
       success: true,
       updated_count: body.scores.length,
       round: updatedRound ? {
         ...updatedRound,
         round_players: roundPlayersWithStats,
-        holes: updatedRound.tee_set.holes,
+        holes,
       } : null,
     });
   } catch (error) {

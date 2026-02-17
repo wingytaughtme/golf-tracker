@@ -316,16 +316,16 @@ export default function PlayerProfilePage() {
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-32"></div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
+        <div className="h-6 bg-cream-400 rounded w-32"></div>
+        <div className="card p-6">
           <div className="flex gap-4">
-            <div className="h-20 w-20 bg-gray-200 rounded-full"></div>
+            <div className="h-20 w-20 bg-cream-400 rounded-full"></div>
             <div className="flex-1">
-              <div className="h-6 bg-gray-200 rounded w-1/3 mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+              <div className="h-6 bg-cream-400 rounded w-1/3 mb-2"></div>
+              <div className="h-4 bg-cream-400 rounded w-1/4 mb-4"></div>
               <div className="flex gap-4">
-                <div className="h-4 bg-gray-200 rounded w-20"></div>
-                <div className="h-4 bg-gray-200 rounded w-24"></div>
+                <div className="h-4 bg-cream-400 rounded w-20"></div>
+                <div className="h-4 bg-cream-400 rounded w-24"></div>
               </div>
             </div>
           </div>
@@ -337,14 +337,14 @@ export default function PlayerProfilePage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <Link href="/players" className="inline-flex items-center text-gray-600 hover:text-gray-900">
+        <Link href="/players" className="inline-flex items-center text-muted hover:text-charcoal">
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Players
         </Link>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <svg className="h-12 w-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-status-error border border-status-error-text/30 rounded-xl p-6 text-center">
+          <svg className="h-12 w-12 text-status-error-text mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -352,8 +352,8 @@ export default function PlayerProfilePage() {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-          <h2 className="text-lg font-semibold text-red-800 mb-2">{error}</h2>
-          <p className="text-red-600">Please try again or go back to the players list.</p>
+          <h2 className="text-lg font-semibold text-status-error-text mb-2">{error}</h2>
+          <p className="text-status-error-text/80">Please try again or go back to the players list.</p>
         </div>
       </div>
     );
@@ -369,7 +369,7 @@ export default function PlayerProfilePage() {
   return (
     <div className="space-y-6">
       {/* Back Link */}
-      <Link href="/players" className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors">
+      <Link href="/players" className="inline-flex items-center text-muted hover:text-charcoal transition-colors">
         <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
@@ -377,13 +377,13 @@ export default function PlayerProfilePage() {
       </Link>
 
       {/* Header Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="card overflow-hidden">
         <div className="p-6">
           <div className="flex flex-col sm:flex-row gap-6">
             {/* Avatar */}
             <div
               className={`flex-shrink-0 h-20 w-20 rounded-full flex items-center justify-center text-3xl font-bold ${
-                player.is_user ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-600'
+                player.is_user ? 'bg-secondary/20 text-secondary-700' : 'bg-cream-300 text-muted'
               }`}
             >
               {player.name.charAt(0).toUpperCase()}
@@ -394,9 +394,9 @@ export default function PlayerProfilePage() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-display font-bold text-golf-text">{player.name}</h1>
+                    <h1 className="text-2xl font-serif font-bold text-charcoal">{player.name}</h1>
                     {player.is_user && (
-                      <span className="px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-secondary/20 text-secondary-700 rounded-full">
                         You
                       </span>
                     )}
@@ -411,10 +411,10 @@ export default function PlayerProfilePage() {
                         ? Number(player.current_handicap).toFixed(1)
                         : '—'}
                     </span>
-                    <span className="text-gray-500">Handicap Index</span>
+                    <span className="text-muted">Handicap Index</span>
                   </div>
 
-                  <div className="flex flex-wrap gap-4 mt-3 text-sm text-gray-500">
+                  <div className="flex flex-wrap gap-4 mt-3 text-sm text-muted">
                     <span>{stats?.data.overall.completedRounds ?? player.rounds_played} rounds played</span>
                     <span>Member since {memberSince}</span>
                     {player.ghin_number && <span>GHIN: {player.ghin_number}</span>}
@@ -424,7 +424,7 @@ export default function PlayerProfilePage() {
                 <div className="flex gap-2">
                   <button
                     onClick={openEditModal}
-                    className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    className="btn-outline inline-flex items-center gap-2"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
@@ -439,7 +439,7 @@ export default function PlayerProfilePage() {
                   {!player.is_user && (
                     <button
                       onClick={handleDelete}
-                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
+                      className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-status-error-text bg-status-error rounded-lg hover:bg-status-error/80 transition-colors"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
@@ -569,15 +569,15 @@ export default function PlayerProfilePage() {
       )}
 
       {/* Tabs Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="border-b border-gray-100">
+      <div className="card overflow-hidden">
+        <div className="border-b border-card-border">
           <nav className="flex">
             <button
               onClick={() => setActiveTab('courses')}
               className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'courses'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-secondary text-secondary-700'
+                  : 'border-transparent text-muted hover:text-charcoal'
               }`}
             >
               Course Breakdown
@@ -586,8 +586,8 @@ export default function PlayerProfilePage() {
               onClick={() => setActiveTab('scoring')}
               className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === 'scoring'
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-secondary text-secondary-700'
+                  : 'border-transparent text-muted hover:text-charcoal'
               }`}
             >
               Scoring by Par
@@ -613,13 +613,13 @@ export default function PlayerProfilePage() {
       {/* Edit Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+          <div className="bg-card rounded-xl shadow-xl max-w-md w-full border border-card-border">
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-golf-text">Edit Player</h2>
+                <h2 className="text-xl font-serif font-semibold text-charcoal">Edit Player</h2>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                  className="p-2 text-muted hover:text-charcoal rounded-lg hover:bg-cream-300"
                 >
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -629,8 +629,8 @@ export default function PlayerProfilePage() {
 
               <form onSubmit={handleSave} className="space-y-4">
                 <div>
-                  <label htmlFor="edit-name" className="block text-sm font-medium text-gray-700 mb-1">
-                    Name <span className="text-red-500">*</span>
+                  <label htmlFor="edit-name" className="label">
+                    Name <span className="text-status-error-text">*</span>
                   </label>
                   <input
                     type="text"
@@ -638,12 +638,12 @@ export default function PlayerProfilePage() {
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
                     required
-                    className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="edit-email" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="edit-email" className="label">
                     Email
                   </label>
                   <input
@@ -651,12 +651,12 @@ export default function PlayerProfilePage() {
                     id="edit-email"
                     value={editEmail}
                     onChange={(e) => setEditEmail(e.target.value)}
-                    className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="edit-ghin" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="edit-ghin" className="label">
                     GHIN Number
                   </label>
                   <input
@@ -664,12 +664,12 @@ export default function PlayerProfilePage() {
                     id="edit-ghin"
                     value={editGhin}
                     onChange={(e) => setEditGhin(e.target.value)}
-                    className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="edit-handicap" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="edit-handicap" className="label">
                     Handicap Index
                   </label>
                   <input
@@ -680,13 +680,13 @@ export default function PlayerProfilePage() {
                     step="0.1"
                     min="-10"
                     max="54"
-                    className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    className="input"
                   />
                 </div>
 
                 {formError && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-red-700 text-sm">{formError}</p>
+                  <div className="p-3 bg-status-error border border-status-error-text/30 rounded-lg">
+                    <p className="text-status-error-text text-sm">{formError}</p>
                   </div>
                 )}
 
@@ -694,14 +694,14 @@ export default function PlayerProfilePage() {
                   <button
                     type="button"
                     onClick={() => setShowEditModal(false)}
-                    className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium transition-colors"
+                    className="btn-outline flex-1"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={isSaving || !editName.trim()}
-                    className="flex-1 px-4 py-2.5 text-white bg-primary rounded-lg hover:bg-primary-600 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn-primary flex-1"
                   >
                     {isSaving ? 'Saving...' : 'Save Changes'}
                   </button>

@@ -77,16 +77,16 @@ export default function PlayerCreateModal({ isOpen, onClose, onCreated }: Player
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div
-        className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+        className="bg-card rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border-t-3 border-secondary"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-golf-text">Add Player</h2>
+            <h2 className="text-xl font-semibold text-charcoal font-serif">Add Player</h2>
             <button
               onClick={handleClose}
               disabled={isLoading}
-              className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 disabled:opacity-50"
+              className="p-2 text-muted hover:text-charcoal rounded-lg hover:bg-cream-300 disabled:opacity-50"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

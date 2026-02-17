@@ -58,12 +58,12 @@ const US_STATES = [
 ];
 
 const TEE_COLORS = [
-  { name: 'Black', value: 'black', bg: 'bg-gray-900', text: 'text-white' },
+  { name: 'Black', value: 'black', bg: 'bg-charcoal', text: 'text-white' },
   { name: 'Blue', value: 'blue', bg: 'bg-blue-600', text: 'text-white' },
-  { name: 'White', value: 'white', bg: 'bg-white border border-gray-300', text: 'text-gray-900' },
-  { name: 'Gold', value: 'gold', bg: 'bg-amber-400', text: 'text-gray-900' },
+  { name: 'White', value: 'white', bg: 'bg-white border border-card-border', text: 'text-charcoal' },
+  { name: 'Gold', value: 'gold', bg: 'bg-secondary', text: 'text-charcoal' },
   { name: 'Red', value: 'red', bg: 'bg-red-600', text: 'text-white' },
-  { name: 'Green', value: 'green', bg: 'bg-green-600', text: 'text-white' },
+  { name: 'Green', value: 'green', bg: 'bg-primary', text: 'text-white' },
 ];
 
 const STEPS = [
@@ -74,7 +74,7 @@ const STEPS = [
 
 const getTeeColorStyles = (colorValue: string) => {
   const color = TEE_COLORS.find(c => c.value === colorValue);
-  return color || { bg: 'bg-gray-200', text: 'text-gray-900' };
+  return color || { bg: 'bg-cream-300', text: 'text-charcoal' };
 };
 
 export default function CourseEditPage() {
@@ -369,39 +369,39 @@ export default function CourseEditPage() {
   // Render Step 1: Basic Info
   const renderStep1 = () => (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-900">Course Information</h2>
+      <h2 className="text-xl font-serif font-semibold text-charcoal">Course Information</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="label">
             Course Name *
           </label>
           <input
             type="text"
             value={wizardData.name}
             onChange={(e) => setWizardData({ ...wizardData, name: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="input"
             placeholder="Enter course name"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">City *</label>
+          <label className="label">City *</label>
           <input
             type="text"
             value={wizardData.city}
             onChange={(e) => setWizardData({ ...wizardData, city: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="input"
             placeholder="City"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">State *</label>
+          <label className="label">State *</label>
           <select
             value={wizardData.state}
             onChange={(e) => setWizardData({ ...wizardData, state: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="input"
           >
             <option value="">Select state</option>
             {US_STATES.map((state) => (
@@ -411,22 +411,22 @@ export default function CourseEditPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">ZIP Code</label>
+          <label className="label">ZIP Code</label>
           <input
             type="text"
             value={wizardData.zip_code}
             onChange={(e) => setWizardData({ ...wizardData, zip_code: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="input"
             placeholder="ZIP code"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Course Type</label>
+          <label className="label">Course Type</label>
           <select
             value={wizardData.course_type}
             onChange={(e) => setWizardData({ ...wizardData, course_type: e.target.value as WizardData['course_type'] })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="input"
           >
             <option value="">Select type</option>
             <option value="public">Public</option>
@@ -437,10 +437,10 @@ export default function CourseEditPage() {
         </div>
 
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Number of Nines</label>
-          <p className="mt-1 text-sm text-gray-500">
+          <label className="label">Number of Nines</label>
+          <p className="mt-1 text-sm text-muted">
             {wizardData.num_nines === 1 ? '9 holes' : wizardData.num_nines === 2 ? '18 holes' : '27 holes'}
-            <span className="text-amber-600 ml-2">(Cannot be changed after creation)</span>
+            <span className="text-status-warning-text ml-2">(Cannot be changed after creation)</span>
           </p>
         </div>
       </div>
@@ -452,8 +452,8 @@ export default function CourseEditPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Scorecard</h2>
-          <p className="text-sm text-gray-600">
+          <h2 className="text-xl font-serif font-semibold text-charcoal">Scorecard</h2>
+          <p className="text-sm text-muted">
             Configure holes, pars, handicaps, and tee sets
           </p>
         </div>
@@ -461,15 +461,15 @@ export default function CourseEditPage() {
 
       {/* Render each nine as a scorecard section */}
       {wizardData.nines.map((nine, nineIndex) => (
-        <div key={nineIndex} className="overflow-hidden rounded-lg border border-gray-200">
+        <div key={nineIndex} className="overflow-hidden rounded-lg border border-card-border">
           {/* Nine header with name input */}
-          <div className="bg-gray-100 px-4 py-2 flex items-center gap-3">
-            <span className="text-sm font-medium text-gray-600">Nine Name:</span>
+          <div className="bg-cream-300 px-4 py-2 flex items-center gap-3">
+            <span className="text-sm font-medium text-muted">Nine Name:</span>
             <input
               type="text"
               value={nine.name}
               onChange={(e) => updateNineName(nineIndex, e.target.value)}
-              className="rounded border border-gray-300 px-2 py-1 text-sm font-semibold w-32"
+              className="rounded border border-card-border px-2 py-1 text-sm font-semibold w-32 focus:border-secondary focus:ring-1 focus:ring-secondary"
             />
           </div>
 
@@ -478,32 +478,32 @@ export default function CourseEditPage() {
             <table className="w-full text-sm">
               <thead>
                 {/* Hole numbers row */}
-                <tr className="bg-gray-50">
-                  <th className="px-2 py-2 text-left font-semibold text-gray-700 w-32 border-r border-gray-200">
+                <tr className="bg-cream-200">
+                  <th className="px-2 py-2 text-left font-semibold text-muted w-32 border-r border-card-border">
                     Hole
                   </th>
                   {nine.holes.map((hole) => (
-                    <th key={hole.hole_number} className="px-1 py-2 text-center font-semibold text-gray-700 w-14 border-r border-gray-100">
+                    <th key={hole.hole_number} className="px-1 py-2 text-center font-semibold text-muted w-14 border-r border-cream-300">
                       {hole.hole_number}
                     </th>
                   ))}
-                  <th className="px-2 py-2 text-center font-semibold text-gray-700 w-16 bg-gray-100">
+                  <th className="px-2 py-2 text-center font-semibold text-muted w-16 bg-cream-300">
                     Out
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {/* Par row */}
-                <tr className="border-t border-gray-200">
-                  <td className="px-2 py-2 font-medium text-gray-700 bg-gray-50 border-r border-gray-200">
+                <tr className="border-t border-card-border">
+                  <td className="px-2 py-2 font-medium text-muted bg-cream-200 border-r border-card-border">
                     Par
                   </td>
                   {nine.holes.map((hole, holeIndex) => (
-                    <td key={hole.hole_number} className="px-1 py-1 border-r border-gray-100">
+                    <td key={hole.hole_number} className="px-1 py-1 border-r border-cream-300">
                       <select
                         value={hole.par}
                         onChange={(e) => updateHole(nineIndex, holeIndex, 'par', parseInt(e.target.value))}
-                        className="w-full rounded border border-gray-300 px-1 py-1 text-center text-sm bg-white"
+                        className="w-full rounded border border-card-border px-1 py-1 text-center text-sm bg-white focus:border-secondary focus:ring-1 focus:ring-secondary"
                       >
                         {[3, 4, 5, 6].map((p) => (
                           <option key={p} value={p}>{p}</option>
@@ -511,24 +511,24 @@ export default function CourseEditPage() {
                       </select>
                     </td>
                   ))}
-                  <td className="px-2 py-2 text-center font-bold text-gray-900 bg-gray-100">
+                  <td className="px-2 py-2 text-center font-bold text-charcoal bg-cream-300">
                     {nine.holes.reduce((sum, h) => sum + h.par, 0)}
                   </td>
                 </tr>
 
                 {/* Handicap row */}
-                <tr className="border-t border-gray-200">
-                  <td className="px-2 py-2 font-medium text-gray-700 bg-gray-50 border-r border-gray-200">
+                <tr className="border-t border-card-border">
+                  <td className="px-2 py-2 font-medium text-muted bg-cream-200 border-r border-card-border">
                     Handicap
                   </td>
                   {nine.holes.map((hole, holeIndex) => {
                     const maxHandicap = wizardData.num_nines === 2 ? 18 : 9;
                     return (
-                      <td key={hole.hole_number} className="px-1 py-1 border-r border-gray-100">
+                      <td key={hole.hole_number} className="px-1 py-1 border-r border-cream-300">
                         <select
                           value={hole.handicap_index > maxHandicap ? maxHandicap : hole.handicap_index}
                           onChange={(e) => updateHole(nineIndex, holeIndex, 'handicap_index', parseInt(e.target.value))}
-                          className="w-full rounded border border-gray-300 px-1 py-1 text-center text-sm bg-white"
+                          className="w-full rounded border border-card-border px-1 py-1 text-center text-sm bg-white focus:border-secondary focus:ring-1 focus:ring-secondary"
                         >
                           {Array.from({ length: maxHandicap }, (_, i) => i + 1).map((h) => (
                             <option key={h} value={h}>{h}</option>
@@ -537,7 +537,7 @@ export default function CourseEditPage() {
                       </td>
                     );
                   })}
-                  <td className="bg-gray-100"></td>
+                  <td className="bg-cream-300"></td>
                 </tr>
 
                 {/* Tee set rows */}
@@ -548,9 +548,9 @@ export default function CourseEditPage() {
                   const totalYardage = nineYardages.reduce((sum, y) => sum + y.yardage, 0);
 
                   return (
-                    <tr key={teeIndex} className="border-t-2 border-gray-300">
+                    <tr key={teeIndex} className="border-t-2 border-card-border">
                       {/* Tee info cell */}
-                      <td className={`px-2 py-2 border-r border-gray-200 ${colorStyles.bg} ${colorStyles.text}`}>
+                      <td className={`px-2 py-2 border-r border-card-border ${colorStyles.bg} ${colorStyles.text}`}>
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => removeTeeSet(teeIndex)}
@@ -565,12 +565,12 @@ export default function CourseEditPage() {
                               value={teeSet.name}
                               onChange={(e) => updateTeeSet(teeIndex, 'name', e.target.value)}
                               placeholder="Name"
-                              className="w-full rounded border border-gray-300 px-1 py-0.5 text-xs text-gray-900 bg-white"
+                              className="w-full rounded border border-card-border px-1 py-0.5 text-xs text-charcoal bg-white"
                             />
                             <select
                               value={teeSet.color}
                               onChange={(e) => updateTeeSet(teeIndex, 'color', e.target.value)}
-                              className="w-full rounded border border-gray-300 px-1 py-0.5 text-xs text-gray-900 bg-white"
+                              className="w-full rounded border border-card-border px-1 py-0.5 text-xs text-charcoal bg-white"
                             >
                               <option value="">Color</option>
                               {TEE_COLORS.map((c) => (
@@ -585,7 +585,7 @@ export default function CourseEditPage() {
                                 max="45"
                                 value={nineRating?.course_rating || 36}
                                 onChange={(e) => updateNineRating(teeIndex, nine.name, 'course_rating', parseFloat(e.target.value))}
-                                className="w-14 rounded border border-gray-300 px-1 py-0.5 text-xs text-gray-900 bg-white"
+                                className="w-14 rounded border border-card-border px-1 py-0.5 text-xs text-charcoal bg-white"
                                 title="Course Rating (9-hole)"
                               />
                               <span className="text-xs opacity-75">/</span>
@@ -595,7 +595,7 @@ export default function CourseEditPage() {
                                 max="155"
                                 value={nineRating?.slope_rating || 113}
                                 onChange={(e) => updateNineRating(teeIndex, nine.name, 'slope_rating', parseInt(e.target.value))}
-                                className="w-12 rounded border border-gray-300 px-1 py-0.5 text-xs text-gray-900 bg-white"
+                                className="w-12 rounded border border-card-border px-1 py-0.5 text-xs text-charcoal bg-white"
                                 title="Slope Rating"
                               />
                             </div>
@@ -606,19 +606,19 @@ export default function CourseEditPage() {
                       {nine.holes.map((hole) => {
                         const yardage = nineYardages.find(y => y.hole_number === hole.hole_number);
                         return (
-                          <td key={hole.hole_number} className="px-0.5 py-1 border-r border-gray-100">
+                          <td key={hole.hole_number} className="px-0.5 py-1 border-r border-cream-300">
                             <input
                               type="number"
                               min="50"
                               max="700"
                               value={yardage?.yardage || 350}
                               onChange={(e) => updateHoleYardage(teeIndex, nine.name, hole.hole_number, parseInt(e.target.value))}
-                              className="w-full rounded border border-gray-300 px-0.5 py-1 text-center text-xs"
+                              className="w-full rounded border border-card-border px-0.5 py-1 text-center text-xs focus:border-secondary focus:ring-1 focus:ring-secondary"
                             />
                           </td>
                         );
                       })}
-                      <td className="px-2 py-2 text-center font-bold text-gray-900 bg-gray-100">
+                      <td className="px-2 py-2 text-center font-bold text-charcoal bg-cream-300">
                         {totalYardage}
                       </td>
                     </tr>
@@ -633,7 +633,7 @@ export default function CourseEditPage() {
       {/* Add Tee Set button */}
       <button
         onClick={addTeeSet}
-        className="flex items-center gap-2 rounded-md border-2 border-dashed border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:border-green-500 hover:text-green-600 transition-colors w-full justify-center"
+        className="flex items-center gap-2 rounded-md border-2 border-dashed border-card-border px-4 py-3 text-sm font-medium text-muted hover:border-secondary hover:text-secondary transition-colors w-full justify-center"
       >
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -643,13 +643,13 @@ export default function CourseEditPage() {
 
       {/* Validation message */}
       {wizardData.tee_sets.length === 0 && (
-        <p className="text-sm text-amber-600 text-center">
+        <p className="text-sm text-status-warning-text text-center">
           Add at least one tee set to continue
         </p>
       )}
 
       {wizardData.tee_sets.length > 0 && !wizardData.tee_sets.every(isTeeSetValid) && (
-        <p className="text-sm text-amber-600 text-center">
+        <p className="text-sm text-status-warning-text text-center">
           Please fill in all tee set details (name, color, ratings, and yardages)
         </p>
       )}
@@ -665,14 +665,14 @@ export default function CourseEditPage() {
 
     return (
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Review & Save</h2>
+        <h2 className="text-xl font-serif font-semibold text-charcoal">Review & Save</h2>
 
-        <div className="rounded-lg bg-gray-50 p-4">
-          <h3 className="mb-2 font-medium text-gray-900">{wizardData.name}</h3>
-          <p className="text-sm text-gray-600">
+        <div className="rounded-lg bg-cream-200 p-4">
+          <h3 className="mb-2 font-medium text-charcoal">{wizardData.name}</h3>
+          <p className="text-sm text-muted">
             {wizardData.city}, {wizardData.state} {wizardData.zip_code}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted">
             {wizardData.num_nines * 9} holes ({wizardData.num_nines === 1 ? '9-hole course' :
               wizardData.num_nines === 2 ? '18-hole course' : '27-hole course'})
             {wizardData.course_type && ` | ${wizardData.course_type}`}
@@ -680,24 +680,24 @@ export default function CourseEditPage() {
         </div>
 
         <div>
-          <h3 className="mb-2 font-medium text-gray-900">Nines</h3>
+          <h3 className="mb-2 font-medium text-charcoal">Nines</h3>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {wizardData.nines.map((nine) => (
-              <div key={nine.name} className="rounded border border-gray-200 p-3">
-                <div className="font-medium">{nine.name}</div>
-                <div className="text-sm text-gray-600">
+              <div key={nine.name} className="rounded border border-card-border p-3 bg-card">
+                <div className="font-medium text-charcoal">{nine.name}</div>
+                <div className="text-sm text-muted">
                   Par {nine.holes.reduce((sum, h) => sum + h.par, 0)}
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-2 text-sm font-medium text-gray-700">
+          <div className="mt-2 text-sm font-medium text-muted">
             Total Par: {totalPar}
           </div>
         </div>
 
         <div>
-          <h3 className="mb-2 font-medium text-gray-900">Tee Sets ({wizardData.tee_sets.length})</h3>
+          <h3 className="mb-2 font-medium text-charcoal">Tee Sets ({wizardData.tee_sets.length})</h3>
           <div className="space-y-2">
             {wizardData.tee_sets.map((tee) => {
               const totalYardage = tee.hole_yardages.reduce((sum, y) => sum + y.yardage, 0);
@@ -708,14 +708,14 @@ export default function CourseEditPage() {
               const colorStyles = getTeeColorStyles(tee.color);
 
               return (
-                <div key={tee.name} className="flex items-center justify-between rounded border border-gray-200 p-3">
+                <div key={tee.name} className="flex items-center justify-between rounded border border-card-border p-3 bg-card">
                   <div className="flex items-center gap-3">
                     <div className={`h-6 w-6 rounded-full ${colorStyles.bg}`} />
-                    <div className="font-medium">{tee.name}</div>
+                    <div className="font-medium text-charcoal">{tee.name}</div>
                   </div>
                   <div className="text-right text-sm">
-                    <div>{totalYardage.toLocaleString()} yards</div>
-                    <div className="text-gray-600">
+                    <div className="text-charcoal">{totalYardage.toLocaleString()} yards</div>
+                    <div className="text-muted">
                       {totalRating.toFixed(1)} / {avgSlope}
                     </div>
                   </div>
@@ -726,8 +726,8 @@ export default function CourseEditPage() {
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="rounded-md bg-status-error p-4">
+            <p className="text-sm text-status-error-text">{error}</p>
           </div>
         )}
       </div>
@@ -738,11 +738,11 @@ export default function CourseEditPage() {
     return (
       <div className="mx-auto max-w-5xl">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-            <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-            <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-8 bg-cream-300 rounded w-1/3"></div>
+          <div className="card p-6">
+            <div className="h-6 bg-cream-300 rounded w-1/2 mb-4"></div>
+            <div className="h-4 bg-cream-300 rounded w-1/4 mb-2"></div>
+            <div className="h-4 bg-cream-300 rounded w-1/3"></div>
           </div>
         </div>
       </div>
@@ -754,16 +754,16 @@ export default function CourseEditPage() {
       <div className="mx-auto max-w-5xl space-y-6">
         <Link
           href={`/courses/${courseId}`}
-          className="inline-flex items-center text-gray-600 hover:text-gray-900"
+          className="inline-flex items-center text-muted hover:text-secondary"
         >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Course
         </Link>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <h2 className="text-lg font-semibold text-red-800 mb-2">{loadError}</h2>
-          <p className="text-red-600">Please try again or go back to the course page.</p>
+        <div className="bg-status-error border border-status-error-text/30 rounded-xl p-6 text-center">
+          <h2 className="text-lg font-semibold text-status-error-text mb-2">{loadError}</h2>
+          <p className="text-status-error-text/80">Please try again or go back to the course page.</p>
         </div>
       </div>
     );
@@ -774,7 +774,7 @@ export default function CourseEditPage() {
       {/* Back Link */}
       <Link
         href={`/courses/${courseId}`}
-        className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-6"
+        className="inline-flex items-center text-muted hover:text-secondary mb-6"
       >
         <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -791,20 +791,20 @@ export default function CourseEditPage() {
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
                     currentStep > step.id
-                      ? 'bg-green-600 text-white'
+                      ? 'bg-secondary text-charcoal'
                       : currentStep === step.id
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-200 text-gray-600'
+                      ? 'bg-primary text-white'
+                      : 'bg-cream-300 text-muted'
                   }`}
                 >
                   {currentStep > step.id ? '✓' : step.id}
                 </div>
-                <span className={`ml-2 text-sm ${currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'}`}>
+                <span className={`ml-2 text-sm ${currentStep >= step.id ? 'text-charcoal' : 'text-muted'}`}>
                   {step.name}
                 </span>
               </div>
               {index < STEPS.length - 1 && (
-                <div className={`mx-4 h-0.5 flex-1 ${currentStep > step.id ? 'bg-green-600' : 'bg-gray-200'}`} />
+                <div className={`mx-4 h-0.5 flex-1 ${currentStep > step.id ? 'bg-secondary' : 'bg-cream-300'}`} />
               )}
             </li>
           ))}
@@ -812,7 +812,7 @@ export default function CourseEditPage() {
       </nav>
 
       {/* Step Content */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="card p-6">
         {currentStep === 1 && renderStep1()}
         {currentStep === 2 && renderStep2()}
         {currentStep === 3 && renderStep3()}
@@ -823,7 +823,7 @@ export default function CourseEditPage() {
         <button
           onClick={handleBack}
           disabled={currentStep === 1}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-outline disabled:cursor-not-allowed disabled:opacity-50"
         >
           Back
         </button>
@@ -832,7 +832,7 @@ export default function CourseEditPage() {
           <button
             onClick={handleNext}
             disabled={!canProceed()}
-            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             Continue
           </button>
@@ -840,7 +840,7 @@ export default function CourseEditPage() {
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || !canProceed()}
-            className="rounded-md bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-primary px-6 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? 'Saving...' : 'Save Changes'}
           </button>

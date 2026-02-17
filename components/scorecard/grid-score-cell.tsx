@@ -152,14 +152,14 @@ export default function GridScoreCell({
 
   // Get background color based on score vs par
   const getBackgroundColor = () => {
-    if (value === null) return 'bg-gray-50';
+    if (value === null) return 'bg-cream-300';
     const diff = value - par;
-    if (diff <= -2) return 'bg-amber-100'; // Eagle+
-    if (diff === -1) return 'bg-green-100'; // Birdie
-    if (diff === 0) return 'bg-white'; // Par
-    if (diff === 1) return 'bg-red-50'; // Bogey
-    if (diff === 2) return 'bg-red-100'; // Double
-    return 'bg-red-200'; // Triple+
+    if (diff <= -2) return 'bg-score-eagle/30'; // Eagle+
+    if (diff === -1) return 'bg-score-birdie/20'; // Birdie
+    if (diff === 0) return 'bg-card'; // Par
+    if (diff === 1) return 'bg-score-bogey/20'; // Bogey
+    if (diff === 2) return 'bg-score-double/20'; // Double
+    return 'bg-score-triple/30'; // Triple+
   };
 
   return (
@@ -174,11 +174,11 @@ export default function GridScoreCell({
       onFocus={handleFocus}
       className={`
         w-8 h-8 text-center font-mono text-sm font-semibold
-        border border-gray-300 rounded
-        focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary
+        border border-card-border rounded
+        focus:outline-none focus:ring-2 focus:ring-secondary focus:border-secondary
         transition-colors duration-150
         ${getBackgroundColor()}
-        ${isFocused ? 'ring-2 ring-primary border-primary' : ''}
+        ${isFocused ? 'ring-2 ring-secondary border-secondary' : ''}
       `}
       maxLength={2}
     />

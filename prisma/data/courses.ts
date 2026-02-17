@@ -17,6 +17,12 @@ export interface TeeSetData {
   holes: HoleData[];
 }
 
+export interface NineConfig {
+  name: string;
+  nine_type: 'front' | 'back' | 'named';
+  display_order: number;
+}
+
 export interface CourseData {
   name: string;
   city: string;
@@ -30,6 +36,7 @@ export interface CourseData {
   latitude: number;
   longitude: number;
   tee_sets: TeeSetData[];
+  nines?: NineConfig[];
 }
 
 // Helper to generate holes with slight variations for different tees

@@ -7,7 +7,7 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -142,7 +142,7 @@ async function recalculateAllHandicaps() {
     where: {
       OR: [
         { calculation_details: { path: ['source'], equals: 'manual' } },
-        { calculation_details: { equals: null } },
+        { calculation_details: { equals: Prisma.DbNull } },
       ],
     },
     orderBy: { effective_date: 'asc' },
@@ -242,7 +242,7 @@ async function recalculateAllHandicaps() {
 
   // Print final handicaps
   console.log('\n=== Final Handicaps ===\n');
-  for (const [playerId, diffs] of playerDifferentials) {
+  for (const [playerId, diffs] of Array.from(playerDifferentials.entries())) {
     const player = await prisma.player.findUnique({ where: { id: playerId } });
     const allDifferentials = diffs.map(d => d.differential);
     const finalHandicap = calculateHandicapIndex(allDifferentials);

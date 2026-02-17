@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
 
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error } = await requireAuth();
+    if (error) return error;
 
     // Get user's own player profile
     const ownPlayer = await prisma.player.findFirst({
@@ -31,12 +24,11 @@ export async function GET() {
       },
     });
 
-    // Get guest players created by this user (players without user_id that were created in rounds by this user)
-    // For now, we'll get all players that don't have a user_id (guests)
-    // In a full implementation, you'd track who created each guest player
+    // Get guest players created by this user
     const guestPlayers = await prisma.player.findMany({
       where: {
         user_id: null,
+        created_by: session.user.id,
       },
       include: {
         home_course: {
@@ -83,14 +75,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error } = await requireAuth();
+    if (error) return error;
 
     const body = await request.json();
     const { name, email, ghin_number, handicap } = body;
@@ -116,12 +102,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create guest player (no user_id)
+    // Create guest player with created_by tracking
     const player = await prisma.player.create({
       data: {
         name: name.trim(),
         email: email?.toLowerCase() || null,
         ghin_number: ghin_number || null,
+        created_by: session.user.id,
       },
     });
 

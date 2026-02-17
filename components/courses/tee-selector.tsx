@@ -37,7 +37,7 @@ function getTeeColor(color: string): string {
 export default function TeeSelector({ teeSets, selectedTeeId, onSelect }: TeeSelectorProps) {
   if (teeSets.length === 0) {
     return (
-      <div className="text-gray-500 text-center py-4">
+      <div className="text-muted text-center py-4">
         No tee sets available for this course.
       </div>
     );
@@ -45,7 +45,7 @@ export default function TeeSelector({ teeSets, selectedTeeId, onSelect }: TeeSel
 
   return (
     <div className="space-y-2">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">Select Tees</h3>
+      <h3 className="text-sm font-medium text-charcoal mb-3">Select Tees</h3>
       <div className="grid gap-2">
         {teeSets.map((tee) => {
           const isSelected = tee.id === selectedTeeId;
@@ -55,8 +55,8 @@ export default function TeeSelector({ teeSets, selectedTeeId, onSelect }: TeeSel
               onClick={() => onSelect(tee.id)}
               className={`w-full flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
                 isSelected
-                  ? 'border-primary bg-primary/5 shadow-sm'
-                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'border-secondary bg-secondary/10 shadow-sm'
+                  : 'border-card-border hover:border-secondary/50 hover:bg-cream-200'
               }`}
             >
               <div className="flex items-center gap-3">
@@ -69,18 +69,18 @@ export default function TeeSelector({ teeSets, selectedTeeId, onSelect }: TeeSel
                   <div className="flex items-center gap-2">
                     <span
                       className={`font-medium ${
-                        isSelected ? 'text-primary' : 'text-golf-text'
+                        isSelected ? 'text-secondary-700' : 'text-charcoal'
                       }`}
                     >
                       {tee.name}
                     </span>
                     {tee.gender && (
-                      <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">
+                      <span className="text-xs text-muted bg-cream-300 px-1.5 py-0.5 rounded">
                         {tee.gender}
                       </span>
                     )}
                   </div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-muted">
                     {tee.course_rating.toString()} / {tee.slope_rating}
                   </div>
                 </div>
@@ -88,14 +88,14 @@ export default function TeeSelector({ teeSets, selectedTeeId, onSelect }: TeeSel
               <div className="text-right">
                 <div
                   className={`text-sm font-medium ${
-                    isSelected ? 'text-primary' : 'text-golf-text'
+                    isSelected ? 'text-secondary-700' : 'text-charcoal'
                   }`}
                 >
                   {tee.total_yardage?.toLocaleString() || '—'} yds
                 </div>
                 {isSelected && (
                   <svg
-                    className="w-5 h-5 text-primary ml-auto mt-1"
+                    className="w-5 h-5 text-secondary ml-auto mt-1"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >

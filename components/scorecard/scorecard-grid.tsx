@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import ScorecardRow from './scorecard-row';
 import ScoreCell from './score-cell';
 import GridScoreCell from './grid-score-cell';
+import DoubleBorder from '@/components/ui/double-border';
 import { useScorecardStore, formatScoreToPar } from '@/stores/scorecard-store';
 
 interface Hole {
@@ -327,12 +328,12 @@ export default function ScorecardGrid({
 
   return (
     <div className="relative">
-      {/* Mobile View Toggle */}
+      {/* Mobile View Toggle - Only shown on mobile */}
       {isMobile && (
-        <div className="flex items-center justify-center gap-1 mb-3 bg-cream-300 rounded-lg p-1">
+        <div className="flex items-center gap-1 bg-cream-300 p-1 border-b border-card-border">
           <button
             onClick={() => setMobileView('front')}
-            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-md transition-colors min-h-[44px] ${
+            className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
               mobileView === 'front'
                 ? 'bg-card text-charcoal shadow-sm'
                 : 'text-muted hover:text-charcoal'
@@ -342,7 +343,7 @@ export default function ScorecardGrid({
           </button>
           <button
             onClick={() => setMobileView('back')}
-            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-md transition-colors min-h-[44px] ${
+            className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
               mobileView === 'back'
                 ? 'bg-card text-charcoal shadow-sm'
                 : 'text-muted hover:text-charcoal'
@@ -352,7 +353,7 @@ export default function ScorecardGrid({
           </button>
           <button
             onClick={() => setMobileView('all')}
-            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-md transition-colors min-h-[44px] ${
+            className={`flex-1 py-2 px-3 text-sm font-medium rounded-md transition-colors ${
               mobileView === 'all'
                 ? 'bg-card text-charcoal shadow-sm'
                 : 'text-muted hover:text-charcoal'
@@ -364,13 +365,8 @@ export default function ScorecardGrid({
       )}
 
       {/* Scorecard Grid - Decorative Double Border */}
-      {/* Outer border: 1px solid gold, with cream gap, then inner border */}
-      <div
-        className="rounded-lg p-[4px] border border-[#B59A58] mt-0.5 mb-0.5 overflow-x-auto"
-        style={{ backgroundColor: '#FDFBF7' }}
-      >
+      <DoubleBorder>
         <div
-          className="rounded border border-[#B59A58] bg-[#FDFBF7]"
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
           onTouchEnd={onTouchEnd}
@@ -614,7 +610,7 @@ export default function ScorecardGrid({
           })}
         </div>
         </div>
-      </div>
+      </DoubleBorder>
 
       {/* Swipe Hint for Mobile */}
       {isMobile && mobileView !== 'all' && (

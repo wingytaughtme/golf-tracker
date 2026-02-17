@@ -308,39 +308,39 @@ export default function CourseCreationWizard() {
   // Render Step 1: Basic Info
   const renderStep1 = () => (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-900">Course Information</h2>
+      <h2 className="text-xl font-semibold text-charcoal">Course Information</h2>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="label">
             Course Name *
           </label>
           <input
             type="text"
             value={wizardData.name}
             onChange={(e) => setWizardData({ ...wizardData, name: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="input"
             placeholder="Enter course name"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">City *</label>
+          <label className="label">City *</label>
           <input
             type="text"
             value={wizardData.city}
             onChange={(e) => setWizardData({ ...wizardData, city: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="input"
             placeholder="City"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">State *</label>
+          <label className="label">State *</label>
           <select
             value={wizardData.state}
             onChange={(e) => setWizardData({ ...wizardData, state: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="input"
           >
             <option value="">Select state</option>
             {US_STATES.map((state) => (
@@ -350,22 +350,22 @@ export default function CourseCreationWizard() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">ZIP Code</label>
+          <label className="label">ZIP Code</label>
           <input
             type="text"
             value={wizardData.zip_code}
             onChange={(e) => setWizardData({ ...wizardData, zip_code: e.target.value })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="input"
             placeholder="ZIP code"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">Course Type</label>
+          <label className="label">Course Type</label>
           <select
             value={wizardData.course_type}
             onChange={(e) => setWizardData({ ...wizardData, course_type: e.target.value as WizardData['course_type'] })}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+            className="input"
           >
             <option value="">Select type</option>
             <option value="public">Public</option>
@@ -376,7 +376,7 @@ export default function CourseCreationWizard() {
         </div>
 
         <div className="sm:col-span-2">
-          <label className="block text-sm font-medium text-gray-700">Number of Nines</label>
+          <label className="label">Number of Nines</label>
           <div className="mt-2 flex gap-4">
             {[1, 2, 3].map((num) => (
               <label key={num} className="flex items-center">
@@ -384,9 +384,9 @@ export default function CourseCreationWizard() {
                   type="radio"
                   checked={wizardData.num_nines === num}
                   onChange={() => updateNumNines(num)}
-                  className="h-4 w-4 text-green-600 focus:ring-green-500"
+                  className="h-4 w-4 text-primary focus:ring-secondary"
                 />
-                <span className="ml-2 text-sm text-gray-700">
+                <span className="ml-2 text-sm text-muted">
                   {num === 1 ? '9 holes' : num === 2 ? '18 holes' : '27 holes'}
                 </span>
               </label>
@@ -402,8 +402,8 @@ export default function CourseCreationWizard() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Scorecard</h2>
-          <p className="text-sm text-gray-600">
+          <h2 className="text-xl font-semibold text-charcoal">Scorecard</h2>
+          <p className="text-sm text-muted">
             Configure holes, pars, handicaps, and tee sets
           </p>
         </div>
@@ -586,7 +586,7 @@ export default function CourseCreationWizard() {
       {/* Add Tee Set button */}
       <button
         onClick={addTeeSet}
-        className="flex items-center gap-2 rounded-md border-2 border-dashed border-gray-300 px-4 py-3 text-sm font-medium text-gray-600 hover:border-green-500 hover:text-green-600 transition-colors w-full justify-center"
+        className="flex items-center gap-2 rounded-md border-2 border-dashed border-card-border px-4 py-3 text-sm font-medium text-muted hover:border-secondary hover:text-secondary-700 transition-colors w-full justify-center"
       >
         <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -596,13 +596,13 @@ export default function CourseCreationWizard() {
 
       {/* Validation message */}
       {wizardData.tee_sets.length === 0 && (
-        <p className="text-sm text-amber-600 text-center">
+        <p className="text-sm text-score-bogey text-center">
           Add at least one tee set to continue
         </p>
       )}
 
       {wizardData.tee_sets.length > 0 && !wizardData.tee_sets.every(isTeeSetValid) && (
-        <p className="text-sm text-amber-600 text-center">
+        <p className="text-sm text-score-bogey text-center">
           Please fill in all tee set details (name, color, ratings, and yardages)
         </p>
       )}
@@ -618,14 +618,14 @@ export default function CourseCreationWizard() {
 
     return (
       <div className="space-y-6">
-        <h2 className="text-xl font-semibold text-gray-900">Review & Create</h2>
+        <h2 className="text-xl font-semibold text-charcoal">Review & Create</h2>
 
-        <div className="rounded-lg bg-gray-50 p-4">
-          <h3 className="mb-2 font-medium text-gray-900">{wizardData.name}</h3>
-          <p className="text-sm text-gray-600">
+        <div className="rounded-lg bg-cream-300 p-4">
+          <h3 className="mb-2 font-medium text-charcoal">{wizardData.name}</h3>
+          <p className="text-sm text-muted">
             {wizardData.city}, {wizardData.state} {wizardData.zip_code}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted">
             {wizardData.num_nines * 9} holes ({wizardData.num_nines === 1 ? '9-hole course' :
               wizardData.num_nines === 2 ? '18-hole course' : '27-hole course'})
             {wizardData.course_type && ` | ${wizardData.course_type}`}
@@ -633,24 +633,24 @@ export default function CourseCreationWizard() {
         </div>
 
         <div>
-          <h3 className="mb-2 font-medium text-gray-900">Nines</h3>
+          <h3 className="mb-2 font-medium text-charcoal">Nines</h3>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {wizardData.nines.map((nine) => (
-              <div key={nine.name} className="rounded border border-gray-200 p-3">
-                <div className="font-medium">{nine.name}</div>
-                <div className="text-sm text-gray-600">
+              <div key={nine.name} className="rounded border border-card-border p-3 bg-card">
+                <div className="font-medium text-charcoal">{nine.name}</div>
+                <div className="text-sm text-muted">
                   Par {nine.holes.reduce((sum, h) => sum + h.par, 0)}
                 </div>
               </div>
             ))}
           </div>
-          <div className="mt-2 text-sm font-medium text-gray-700">
+          <div className="mt-2 text-sm font-medium text-muted">
             Total Par: {totalPar}
           </div>
         </div>
 
         <div>
-          <h3 className="mb-2 font-medium text-gray-900">Tee Sets ({wizardData.tee_sets.length})</h3>
+          <h3 className="mb-2 font-medium text-charcoal">Tee Sets ({wizardData.tee_sets.length})</h3>
           <div className="space-y-2">
             {wizardData.tee_sets.map((tee) => {
               const totalYardage = tee.hole_yardages.reduce((sum, y) => sum + y.yardage, 0);
@@ -661,14 +661,14 @@ export default function CourseCreationWizard() {
               const colorStyles = getTeeColorStyles(tee.color);
 
               return (
-                <div key={tee.name} className="flex items-center justify-between rounded border border-gray-200 p-3">
+                <div key={tee.name} className="flex items-center justify-between rounded border border-card-border p-3 bg-card">
                   <div className="flex items-center gap-3">
                     <div className={`h-6 w-6 rounded-full ${colorStyles.bg}`} />
-                    <div className="font-medium">{tee.name}</div>
+                    <div className="font-medium text-charcoal">{tee.name}</div>
                   </div>
                   <div className="text-right text-sm">
-                    <div>{totalYardage.toLocaleString()} yards</div>
-                    <div className="text-gray-600">
+                    <div className="text-charcoal">{totalYardage.toLocaleString()} yards</div>
+                    <div className="text-muted">
                       {totalRating.toFixed(1)} / {avgSlope}
                     </div>
                   </div>
@@ -679,8 +679,8 @@ export default function CourseCreationWizard() {
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-4">
-            <p className="text-sm text-red-700">{error}</p>
+          <div className="rounded-md bg-status-error p-4">
+            <p className="text-sm text-status-error-text">{error}</p>
           </div>
         )}
       </div>
@@ -698,20 +698,20 @@ export default function CourseCreationWizard() {
                 <div
                   className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
                     currentStep > step.id
-                      ? 'bg-green-600 text-white'
+                      ? 'bg-secondary text-secondary-900'
                       : currentStep === step.id
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-200 text-gray-600'
+                      ? 'bg-secondary text-secondary-900'
+                      : 'bg-cream-300 text-muted'
                   }`}
                 >
                   {currentStep > step.id ? '✓' : step.id}
                 </div>
-                <span className={`ml-2 text-sm ${currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'}`}>
+                <span className={`ml-2 text-sm ${currentStep >= step.id ? 'text-charcoal' : 'text-muted'}`}>
                   {step.name}
                 </span>
               </div>
               {index < STEPS.length - 1 && (
-                <div className={`mx-4 h-0.5 flex-1 ${currentStep > step.id ? 'bg-green-600' : 'bg-gray-200'}`} />
+                <div className={`mx-4 h-0.5 flex-1 ${currentStep > step.id ? 'bg-secondary' : 'bg-cream-300'}`} />
               )}
             </li>
           ))}
@@ -719,7 +719,7 @@ export default function CourseCreationWizard() {
       </nav>
 
       {/* Step Content */}
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="card p-6">
         {currentStep === 1 && renderStep1()}
         {currentStep === 2 && renderStep2()}
         {currentStep === 3 && renderStep3()}
@@ -730,7 +730,7 @@ export default function CourseCreationWizard() {
         <button
           onClick={handleBack}
           disabled={currentStep === 1}
-          className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-outline disabled:cursor-not-allowed disabled:opacity-50"
         >
           Back
         </button>
@@ -739,7 +739,7 @@ export default function CourseCreationWizard() {
           <button
             onClick={handleNext}
             disabled={!canProceed()}
-            className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-primary disabled:cursor-not-allowed disabled:opacity-50"
           >
             Continue
           </button>
@@ -747,7 +747,7 @@ export default function CourseCreationWizard() {
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || !canProceed()}
-            className="rounded-md bg-green-600 px-6 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="btn-primary px-6 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSubmitting ? 'Creating...' : 'Create Course'}
           </button>

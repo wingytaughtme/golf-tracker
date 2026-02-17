@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireAuth, requireOwnership } from '@/lib/auth-helpers';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -9,14 +8,8 @@ interface RouteParams {
 
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error } = await requireAuth();
+    if (error) return error;
 
     const { id } = await params;
 
@@ -110,14 +103,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id } = await params;
     const body = await request.json();
@@ -140,6 +127,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         { status: 404 }
       );
     }
+
+    // Ownership check: user-linked players check user_id, guest players check created_by
+    const ownerId = existingPlayer.user_id ?? existingPlayer.created_by;
+    const { error: ownerError } = requireOwnership(ownerId, session);
+    if (ownerError) return ownerError;
 
     // Validate name if provided
     if (name !== undefined && (typeof name !== 'string' || name.trim().length === 0)) {
@@ -220,14 +212,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id } = await params;
 
@@ -243,7 +229,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Cannot delete user's own player profile
+    // Cannot delete your own linked player profile
     if (player.user_id === session.user.id) {
       return NextResponse.json(
         { error: 'Cannot delete your own player profile' },
@@ -251,12 +237,18 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Cannot delete any player linked to a user account
+    // For user-linked players, only admin can delete
     if (player.user_id) {
-      return NextResponse.json(
-        { error: 'Cannot delete a player linked to a user account' },
-        { status: 403 }
-      );
+      if (session.user.role !== 'admin') {
+        return NextResponse.json(
+          { error: 'Cannot delete a player linked to a user account' },
+          { status: 403 }
+        );
+      }
+    } else {
+      // Guest player: only the creator or admin can delete
+      const { error: ownerError } = requireOwnership(player.created_by, session);
+      if (ownerError) return ownerError;
     }
 
     // Delete the player (cascades to handicap_history)

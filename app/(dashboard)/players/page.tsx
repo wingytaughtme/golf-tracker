@@ -81,12 +81,12 @@ export default function PlayersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-golf-text">Players</h1>
-          <p className="text-gray-600 mt-1">Manage your playing partners</p>
+          <h1 className="text-2xl font-serif font-bold text-charcoal">Players</h1>
+          <p className="text-muted mt-1">Manage your playing partners</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-600 transition-colors"
+          className="btn-primary inline-flex items-center gap-2"
         >
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -97,9 +97,9 @@ export default function PlayersPage() {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+        <div className="bg-status-error border border-status-error-text/30 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5 text-status-error-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -107,7 +107,7 @@ export default function PlayersPage() {
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className="text-red-700">{error}</p>
+            <p className="text-status-error-text">{error}</p>
           </div>
         </div>
       )}
@@ -116,20 +116,20 @@ export default function PlayersPage() {
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 animate-pulse">
+            <div key={i} className="card p-5 animate-pulse">
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-5 bg-cream-400 rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-cream-400 rounded w-1/2"></div>
                 </div>
-                <div className="h-12 w-12 bg-gray-200 rounded-full"></div>
+                <div className="h-12 w-12 bg-cream-400 rounded-full"></div>
               </div>
               <div className="flex gap-3 mt-4">
-                <div className="h-4 bg-gray-200 rounded w-20"></div>
-                <div className="h-4 bg-gray-200 rounded w-16"></div>
+                <div className="h-4 bg-cream-400 rounded w-20"></div>
+                <div className="h-4 bg-cream-400 rounded w-16"></div>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <div className="h-10 bg-gray-200 rounded-lg"></div>
+              <div className="mt-4 pt-4 border-t border-card-border">
+                <div className="h-10 bg-cream-400 rounded-lg"></div>
               </div>
             </div>
           ))}
@@ -142,7 +142,7 @@ export default function PlayersPage() {
           {/* Your Profile */}
           {ownPlayer && (
             <div>
-              <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+              <h2 className="text-sm font-medium text-muted uppercase tracking-wider mb-3">
                 Your Profile
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -153,7 +153,7 @@ export default function PlayersPage() {
 
           {/* Guest Players */}
           <div>
-            <h2 className="text-sm font-medium text-gray-500 uppercase tracking-wider mb-3">
+            <h2 className="text-sm font-medium text-muted uppercase tracking-wider mb-3">
               Playing Partners ({guestPlayers.length})
             </h2>
             {guestPlayers.length > 0 ? (
@@ -167,9 +167,9 @@ export default function PlayersPage() {
                 ))}
               </div>
             ) : (
-              <div className="bg-white rounded-xl p-8 text-center shadow-sm border border-gray-100">
-                <div className="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <svg className="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="card p-8 text-center">
+                <div className="h-12 w-12 bg-cream-300 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="h-6 w-6 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -178,13 +178,13 @@ export default function PlayersPage() {
                     />
                   </svg>
                 </div>
-                <h3 className="text-gray-900 font-medium mb-1">No playing partners yet</h3>
-                <p className="text-gray-500 text-sm mb-4">
+                <h3 className="text-charcoal font-medium mb-1">No playing partners yet</h3>
+                <p className="text-muted text-sm mb-4">
                   Add players to track their scores and handicaps
                 </p>
                 <button
                   onClick={() => setShowCreateModal(true)}
-                  className="text-primary hover:text-primary-600 font-medium text-sm"
+                  className="text-secondary hover:text-secondary-600 font-medium text-sm"
                 >
                   Add your first player
                 </button>

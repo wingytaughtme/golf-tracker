@@ -56,7 +56,7 @@ export default function MobileNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-pb">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-secondary/30 z-50 safe-area-pb">
       <div className="flex justify-around items-center h-16">
         {navigation.map((item) => {
           const isActive = item.href === '/dashboard'
@@ -70,7 +70,7 @@ export default function MobileNav() {
                 href={item.href}
                 className="flex flex-col items-center justify-center -mt-4"
               >
-                <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center text-white shadow-lg">
+                <div className="h-14 w-14 rounded-full bg-primary flex items-center justify-center text-secondary shadow-elevated border-2 border-secondary">
                   {item.icon}
                 </div>
               </Link>
@@ -81,14 +81,19 @@ export default function MobileNav() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex flex-col items-center justify-center py-2 px-3 min-w-[64px] ${
-                isActive ? 'text-primary' : 'text-gray-500'
+              className={`flex flex-col items-center justify-center py-2 px-3 min-w-[64px] transition-colors ${
+                isActive ? 'text-primary' : 'text-muted'
               }`}
             >
-              <span className={isActive ? 'text-primary' : 'text-gray-400'}>
+              <span className={isActive ? 'text-primary' : 'text-muted'}>
                 {item.icon}
               </span>
-              <span className="text-xs mt-1 font-medium">{item.name}</span>
+              <span className={`text-xs mt-1 font-medium ${isActive ? 'text-primary' : 'text-muted'}`}>
+                {item.name}
+              </span>
+              {isActive && (
+                <span className="absolute bottom-1 w-8 h-0.5 bg-secondary rounded-full" />
+              )}
             </Link>
           );
         })}

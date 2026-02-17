@@ -48,30 +48,31 @@ export default function ScorecardRow({
   };
 
   const getCellStyles = (isTotal: boolean = false) => {
-    const size = compactMode ? 'w-10 h-12 min-w-[40px]' : 'w-12 h-12 min-w-[48px]';
-    const base = `${size} flex items-center justify-center font-mono text-sm border-r border-card-border/50 last:border-r-0 overflow-hidden`;
-
     if (isTotal) {
-      // OUT/IN columns - slightly highlighted
-      return `${base} bg-cream-300/70 font-bold`;
+      // OUT/IN columns - wider (~20% more) with distinct background
+      const size = compactMode ? 'w-12 h-12 min-w-[48px]' : 'w-14 h-12 min-w-[58px]';
+      const base = `${size} flex items-center justify-center font-mono text-sm border-r border-card-border/50 last:border-r-0 overflow-hidden`;
+      return `${base} bg-[#F5F2EA] font-bold`;
     }
 
+    const size = compactMode ? 'w-10 h-12 min-w-[40px]' : 'w-12 h-12 min-w-[48px]';
+    const base = `${size} flex items-center justify-center font-mono text-sm border-r border-card-border/50 last:border-r-0 overflow-hidden`;
     return base;
   };
 
   const getGrandTotalStyles = () => {
-    const size = compactMode ? 'w-14 h-12 min-w-[56px]' : 'w-16 h-12 min-w-[64px]';
+    // TOTAL column - wider (~20% more) with distinct background
+    const size = compactMode ? 'w-16 h-12 min-w-[68px]' : 'w-[76px] h-12 min-w-[76px]';
     const base = `${size} flex items-center justify-center font-mono text-sm font-bold`;
-
-    // TOTAL column - same background as OUT/IN columns
-    return `${base} bg-cream-300/70`;
+    return `${base} bg-[#F5F2EA]`;
   };
 
   const getLabelStyles = () => {
     // flex-1 allows the label column to grow and fill remaining space
     const width = compactMode ? 'min-w-[80px] flex-1' : 'min-w-[96px] flex-1';
     const height = type === 'player' ? 'min-h-12' : 'h-12';
-    const base = `${width} ${height} flex items-center px-3 font-mono font-semibold text-sm border-r border-card-border bg-cream-200`;
+    // Use sans-serif (Inter) for labels, not monospace
+    const base = `${width} ${height} flex items-center px-3 font-sans font-semibold text-sm border-r border-card-border bg-cream-200`;
 
     switch (type) {
       case 'hole':

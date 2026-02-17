@@ -18,11 +18,11 @@ interface HandicapChartProps {
 export function HandicapChart({ data, title = 'Handicap Trend', height = 300 }: HandicapChartProps) {
   if (!data || data.length === 0) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-        <h3 className="text-lg font-semibold text-golf-text mb-4">{title}</h3>
-        <div className="flex items-center justify-center h-64 text-gray-500">
+      <div className="card p-6">
+        <h3 className="text-lg font-semibold text-charcoal font-serif mb-4">{title}</h3>
+        <div className="flex items-center justify-center h-64 text-muted">
           <div className="text-center">
-            <svg className="h-12 w-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-12 w-12 mx-auto mb-3 text-cream-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
             </svg>
             <p>Not enough data to display chart</p>
@@ -33,33 +33,57 @@ export function HandicapChart({ data, title = 'Handicap Trend', height = 300 }: 
     );
   }
 
-  const chartData = data.map((point) => ({
+  // Consolidate same-day entries - keep only the last entry for each date
+  // (represents the final handicap after all rounds that day)
+  const consolidatedData = new Map<string, TrendDataPoint>();
+  for (const point of data) {
+    const dateKey = new Date(point.date).toISOString().split('T')[0];
+    consolidatedData.set(dateKey, point); // Later entries overwrite earlier ones
+  }
+
+  // Convert to array and sort by date
+  const sortedData = Array.from(consolidatedData.values())
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  // Add timestamp for proper time scaling
+  const chartData = sortedData.map((point) => ({
     ...point,
-    date: new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+    timestamp: new Date(point.date).getTime(),
+    dateLabel: new Date(point.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
     fullDate: new Date(point.date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
   }));
 
-  const minValue = Math.floor(Math.min(...data.map((d) => d.value)) - 1);
-  const maxValue = Math.ceil(Math.max(...data.map((d) => d.value)) + 1);
+  const minValue = Math.floor(Math.min(...chartData.map((d) => d.value)) - 1);
+  const maxValue = Math.ceil(Math.max(...chartData.map((d) => d.value)) + 1);
+
+  // Format tick labels
+  const formatXAxis = (timestamp: number) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-      <h3 className="text-lg font-semibold text-golf-text mb-4">{title}</h3>
+    <div className="card p-6">
+      <h3 className="text-lg font-semibold text-charcoal font-serif mb-4">{title}</h3>
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#E0D8C8" />
             <XAxis
-              dataKey="date"
-              tick={{ fontSize: 12, fill: '#6b7280' }}
-              tickLine={{ stroke: '#e5e7eb' }}
-              axisLine={{ stroke: '#e5e7eb' }}
+              dataKey="timestamp"
+              type="number"
+              scale="time"
+              domain={['dataMin', 'dataMax']}
+              tickFormatter={formatXAxis}
+              tick={{ fontSize: 12, fill: '#5D5D5D' }}
+              tickLine={{ stroke: '#E0D8C8' }}
+              axisLine={{ stroke: '#E0D8C8' }}
             />
             <YAxis
               domain={[minValue, maxValue]}
-              tick={{ fontSize: 12, fill: '#6b7280' }}
-              tickLine={{ stroke: '#e5e7eb' }}
-              axisLine={{ stroke: '#e5e7eb' }}
+              tick={{ fontSize: 12, fill: '#5D5D5D' }}
+              tickLine={{ stroke: '#E0D8C8' }}
+              axisLine={{ stroke: '#E0D8C8' }}
               tickFormatter={(value) => value.toFixed(1)}
             />
             <Tooltip
@@ -67,10 +91,10 @@ export function HandicapChart({ data, title = 'Handicap Trend', height = 300 }: 
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
                   return (
-                    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-                      <p className="font-semibold text-golf-text">{data.value.toFixed(1)}</p>
-                      <p className="text-sm text-gray-500">{data.fullDate}</p>
-                      <p className="text-xs text-gray-400">{data.courseName}</p>
+                    <div className="bg-card border border-card-border rounded-lg shadow-lg p-3">
+                      <p className="font-semibold text-charcoal">{data.value.toFixed(1)}</p>
+                      <p className="text-sm text-muted">{data.fullDate}</p>
+                      <p className="text-xs text-muted">{data.courseName}</p>
                     </div>
                   );
                 }
@@ -80,10 +104,10 @@ export function HandicapChart({ data, title = 'Handicap Trend', height = 300 }: 
             <Line
               type="monotone"
               dataKey="value"
-              stroke="#059669"
+              stroke="#1E4D3B"
               strokeWidth={2}
-              dot={{ fill: '#059669', strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, fill: '#059669' }}
+              dot={{ fill: '#D4AF6A', strokeWidth: 2, r: 4, stroke: '#1E4D3B' }}
+              activeDot={{ r: 6, fill: '#D4AF6A', stroke: '#1E4D3B' }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -94,9 +118,9 @@ export function HandicapChart({ data, title = 'Handicap Trend', height = 300 }: 
 
 export function HandicapChartSkeleton({ height = 300 }: { height?: number }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 animate-pulse">
-      <div className="h-6 bg-gray-200 rounded w-40 mb-4"></div>
-      <div style={{ height }} className="bg-gray-100 rounded"></div>
+    <div className="card p-6 animate-pulse">
+      <div className="h-6 bg-cream-300 rounded w-40 mb-4"></div>
+      <div style={{ height }} className="bg-cream-200 rounded"></div>
     </div>
   );
 }

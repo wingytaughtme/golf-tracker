@@ -16,8 +16,6 @@ interface ScoreCellProps {
   className?: string;
   isCurrentHole?: boolean;
   showDetailedStats?: boolean;
-  // New prop for compact mode (no labels)
-  compact?: boolean;
 }
 
 export default function ScoreCell({
@@ -32,7 +30,6 @@ export default function ScoreCell({
   className = '',
   isCurrentHole = false,
   showDetailedStats = false,
-  compact = false,
 }: ScoreCellProps) {
   const [showInput, setShowInput] = useState(false);
   const [inputPosition, setInputPosition] = useState({ top: 0, left: 0 });
@@ -241,7 +238,6 @@ export default function ScoreCell({
   };
 
   const style = getScoreStyle();
-  const showLabel = !compact && !isTotal && !isSubtotal && value !== null && style.label;
 
   const interactiveClasses = isInteractive && !isTotal && !isSubtotal
     ? 'cursor-pointer hover:ring-2 hover:ring-secondary hover:ring-offset-1 active:scale-95 focus:outline-none'
@@ -281,7 +277,7 @@ export default function ScoreCell({
           onFocus={handleFocus}
           className={`
             flex items-center justify-center
-            w-[26px] h-[26px]
+            w-[30px] h-[30px]
             ${getShapeClass()}
             transition-all duration-200 ease-out
             ${style.bg}
@@ -300,18 +296,11 @@ export default function ScoreCell({
               : undefined
           }
         >
-          {/* Score Number */}
-          <span className="text-sm font-mono leading-none">
+          {/* Score Number - Larger font for player scores */}
+          <span className="text-base font-mono font-bold leading-none">
             {value !== null ? value : '-'}
           </span>
         </div>
-
-        {/* Score Label (Birdie, Par, etc.) - outside pill with regular background */}
-        {showLabel && (
-          <span className="text-[9px] leading-none mt-1 font-medium text-charcoal">
-            {style.label}
-          </span>
-        )}
 
         {/* Detailed Stats Indicators */}
         {showDetailedStats && hasDetailedStats && !isTotal && !isSubtotal && (

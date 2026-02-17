@@ -1,21 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireAuth, requireOwnership } from '@/lib/auth-helpers';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id } = await params;
 
@@ -32,9 +25,24 @@ export async function GET(
           },
         },
         tee_set: {
+          select: {
+            id: true,
+            name: true,
+            color: true,
+            course_rating: true,
+            slope_rating: true,
+            total_yardage: true,
+          },
+        },
+        round_nines: {
+          orderBy: { play_order: 'asc' },
           include: {
-            holes: {
-              orderBy: { hole_number: 'asc' },
+            nine: {
+              include: {
+                holes: {
+                  orderBy: { hole_number: 'asc' },
+                },
+              },
             },
           },
         },
@@ -116,10 +124,51 @@ export async function GET(
       };
     });
 
+    // Get unique holes from scores (this ensures we only show holes that were actually played)
+    // This handles historical rounds that may have incorrect round_nines records
+    const holesFromScores = new Map<string, typeof round.round_players[0]['scores'][0]['hole']>();
+    for (const rp of round.round_players) {
+      for (const score of rp.scores) {
+        if (score.hole && !holesFromScores.has(score.hole.id)) {
+          holesFromScores.set(score.hole.id, score.hole);
+        }
+      }
+    }
+
+    // If we have holes from scores, use those; otherwise fall back to round_nines
+    let holes;
+    if (holesFromScores.size > 0) {
+      // Sort by hole_number and add display info
+      const sortedHoles = Array.from(holesFromScores.values())
+        .sort((a, b) => a.hole_number - b.hole_number);
+
+      holes = sortedHoles.map((hole, index) => ({
+        ...hole,
+        display_number: index + 1,
+        nine_index: index < 9 ? 0 : 1,
+        nine_name: index < 9 ? 'Front' : 'Back',
+      }));
+    } else {
+      // Fall back to round_nines for new rounds without scores yet
+      // IMPORTANT: Filter holes by the round's tee_set_id to avoid getting holes from ALL tee sets
+      const roundTeeSetId = round.tee_set.id;
+      let displayNumber = 0;
+      holes = round.round_nines.flatMap((rn, nineIndex) =>
+        rn.nine.holes
+          .filter((hole) => hole.tee_set_id === roundTeeSetId)
+          .map((hole) => ({
+            ...hole,
+            display_number: ++displayNumber,
+            nine_index: nineIndex,
+            nine_name: rn.nine.name,
+          }))
+      );
+    }
+
     return NextResponse.json({
       ...round,
       round_players: roundPlayersWithStats,
-      holes: round.tee_set.holes,
+      holes,
     });
   } catch (error) {
     console.error('Error fetching round:', error);
@@ -135,14 +184,8 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id } = await params;
     const body = await request.json();
@@ -159,13 +202,8 @@ export async function PUT(
       );
     }
 
-    // Verify user created this round
-    if (round.created_by !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Access denied' },
-        { status: 403 }
-      );
-    }
+    const { error: ownerError } = requireOwnership(round.created_by, session);
+    if (ownerError) return ownerError;
 
     // Build update data
     const updateData: Record<string, unknown> = {};
@@ -246,14 +284,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id } = await params;
     const body = await request.json();
@@ -270,13 +302,8 @@ export async function PATCH(
       );
     }
 
-    // Verify user created this round
-    if (round.created_by !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Access denied' },
-        { status: 403 }
-      );
-    }
+    const { error: ownerError } = requireOwnership(round.created_by, session);
+    if (ownerError) return ownerError;
 
     // Update allowed fields
     const updateData: Record<string, unknown> = {};
@@ -347,14 +374,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id } = await params;
 
@@ -370,13 +391,8 @@ export async function DELETE(
       );
     }
 
-    // Verify user created this round
-    if (round.created_by !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Access denied' },
-        { status: 403 }
-      );
-    }
+    const { error: ownerError } = requireOwnership(round.created_by, session);
+    if (ownerError) return ownerError;
 
     // Delete the round (cascade will delete round_players and scores)
     await prisma.round.delete({

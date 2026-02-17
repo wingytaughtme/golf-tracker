@@ -1,11 +1,11 @@
 'use client';
 
 interface ScorecardHeaderProps {
-  courseName: string;
-  courseLocation: string;
+  courseName?: string; // Deprecated - now shown in page header
+  courseLocation?: string; // Deprecated - now shown in page header
   datePlayed: string;
   teeSetName: string;
-  teeSetColor: string;
+  teeSetColor?: string; // Displayed as a small colored dot indicator
   courseRating: number;
   slopeRating: number;
   weather?: string | null;
@@ -13,8 +13,6 @@ interface ScorecardHeaderProps {
 }
 
 export default function ScorecardHeader({
-  courseName,
-  courseLocation,
   datePlayed,
   teeSetName,
   teeSetColor,
@@ -32,32 +30,13 @@ export default function ScorecardHeader({
     });
   };
 
-  const getTeeColorClass = (color: string): string => {
-    const colors: Record<string, string> = {
-      black: 'bg-gray-900',
-      blue: 'bg-blue-600',
-      white: 'bg-white border-2 border-gray-400',
-      gold: 'bg-amber-400',
-      yellow: 'bg-yellow-400',
-      red: 'bg-red-600',
-      green: 'bg-green-600',
-    };
-    return colors[color.toLowerCase()] || 'bg-gray-400';
-  };
-
   return (
-    <div className="bg-gradient-to-r from-green-800 to-green-700 text-white p-4 rounded-t-lg">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        {/* Course Info */}
-        <div>
-          <h2 className="text-xl font-bold font-display">{courseName}</h2>
-          <p className="text-green-200 text-sm">{courseLocation}</p>
-        </div>
-
-        {/* Date & Weather */}
+    <div className="bg-gradient-to-r from-primary to-primary-600 text-white px-4 py-3">
+      <div className="flex items-center justify-between gap-4">
+        {/* Left Side: Date & Weather */}
         <div className="flex flex-wrap items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
-            <svg className="h-4 w-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -70,7 +49,7 @@ export default function ScorecardHeader({
 
           {weather && (
             <div className="flex items-center gap-2">
-              <svg className="h-4 w-4 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -79,20 +58,43 @@ export default function ScorecardHeader({
                 />
               </svg>
               <span>{weather}</span>
-              {temperature && <span>({temperature}°F)</span>}
+              {temperature !== null && temperature !== undefined && (
+                <span>({temperature}°F)</span>
+              )}
             </div>
           )}
         </div>
 
-        {/* Tee Info */}
-        <div className="flex items-center gap-3 bg-white/10 rounded-lg px-4 py-2">
-          <div className={`w-4 h-4 rounded-full ${getTeeColorClass(teeSetColor)}`} />
-          <div>
-            <p className="font-semibold">{teeSetName} Tees</p>
-            <p className="text-xs text-green-200">
-              Rating: {courseRating.toFixed(1)} / Slope: {slopeRating}
-            </p>
-          </div>
+        {/* Right Side: Tee Badge */}
+        <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#B59A58] bg-white/5 flex-shrink-0">
+            {/* Golf Tee Icon */}
+            <svg
+              className="w-4 h-5 text-[#D4AF6A] flex-shrink-0"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+            >
+              <path d="M12 2L12 4C12 4 10 5 10 8C10 11 12 12 12 12C12 12 14 11 14 8C14 5 12 4 12 4L12 2Z" />
+              <path d="M11 12L11 20L10 22L14 22L13 20L13 12" />
+            </svg>
+
+            {/* Tee Name & Rating */}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                {teeSetColor && (
+                  <span
+                    className="w-2.5 h-2.5 rounded-full border border-white/30 flex-shrink-0"
+                    style={{ backgroundColor: teeSetColor }}
+                    aria-label={`${teeSetName} tee color`}
+                  />
+                )}
+                <span className="text-white font-bold text-sm leading-tight">
+                  {teeSetName} Tees
+                </span>
+              </div>
+              <span className="text-[#D4AF6A] text-xs leading-tight">
+                Rating: {courseRating.toFixed(1)} | Slope: {slopeRating}
+              </span>
+            </div>
         </div>
       </div>
     </div>

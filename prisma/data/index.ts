@@ -1,5 +1,5 @@
 // Export all course data
-export type { CourseData, TeeSetData, HoleData } from './courses';
+export type { CourseData, TeeSetData, HoleData, NineConfig } from './courses';
 
 // Famous courses
 export { pebbleBeach, augustaNational, pinehurstNo2 } from './courses';
@@ -11,6 +11,27 @@ export { caddyShack as streamsongRed, chambersBay, cogsHill, rusticCanyon, arcad
 export { pga_west as pgaWest, bayHill, harborTown, lpgaIntl, halfMoonBay } from './publicCourses2';
 export { worldGolf, kohlerBlackwolf, kapaluaBay, troonNorth, pasatimpo } from './publicCourses3';
 
+// Personal courses (friends-beta)
+export {
+  olympiaFieldsNorth,
+  olympiaFieldsSouth,
+  prestwickCC,
+  greenGardenGold,
+  sugarSprings,
+  pheasantRunNS,
+  pheasantRunSW,
+  pheasantRunWN,
+  maumeeBay,
+  theDream,
+  theNightmare,
+  cogHill1,
+  cogHill2,
+  cogHill3,
+  cogHill4,
+  clarkLake,
+  personalCourses,
+} from './personalCourses';
+
 // Import all for convenience
 import { pebbleBeach, augustaNational, pinehurstNo2 } from './courses';
 import { tpcSawgrass, torreyPinesSouth, bethpageBlack, whistlingStraits } from './courses2';
@@ -18,6 +39,7 @@ import { kiawahOcean, bandonDunes, shadowCreek } from './courses3';
 import { caddyShack, chambersBay, cogsHill, rusticCanyon, arcadia } from './publicCourses1';
 import { pga_west, bayHill, harborTown, lpgaIntl, halfMoonBay } from './publicCourses2';
 import { worldGolf, kohlerBlackwolf, kapaluaBay, troonNorth, pasatimpo } from './publicCourses3';
+import { personalCourses } from './personalCourses';
 import { CourseData } from './courses';
 
 // All courses array for seeding
@@ -49,4 +71,6 @@ export const allCourses: CourseData[] = [
   kapaluaBay,      // HI
   troonNorth,      // AZ
   pasatimpo,       // CA
+  // Personal courses (16)
+  ...personalCourses,
 ];

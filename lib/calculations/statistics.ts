@@ -154,9 +154,15 @@ export async function getPlayerOverallStats(playerId: string): Promise<PlayerOve
       round: {
         include: {
           course: true,
-          tee_set: {
+          tee_set: true,
+          round_nines: {
+            orderBy: { play_order: 'asc' },
             include: {
-              holes: true,
+              nine: {
+                include: {
+                  holes: true,
+                },
+              },
             },
           },
         },
@@ -238,13 +244,15 @@ export async function getPlayerOverallStats(playerId: string): Promise<PlayerOve
   let totalHolesPlayed = 0;
 
   for (const rp of roundPlayers) {
-    const roundPar = rp.round.tee_set.holes.reduce((sum, h) => sum + h.par, 0);
+    // Get holes from round_nines
+    const roundHoles = rp.round.round_nines.flatMap((rn) => rn.nine.holes);
+    const roundPar = roundHoles.reduce((sum, h) => sum + h.par, 0);
     const holesWithScores = rp.scores.length;
 
     // Adjust par if not all holes played (9-hole rounds)
-    const adjustedPar = holesWithScores < 18
+    const adjustedPar = holesWithScores < roundHoles.length
       ? rp.scores.reduce((sum, s) => {
-          const hole = rp.round.tee_set.holes.find((h) => h.id === s.hole_id);
+          const hole = roundHoles.find((h) => h.id === s.hole_id);
           return sum + (hole?.par || 0);
         }, 0)
       : roundPar;
@@ -258,19 +266,27 @@ export async function getPlayerOverallStats(playerId: string): Promise<PlayerOve
     ((totalGross - totalPar) / completedRounds) * 10
   ) / 10;
 
-  // Get current handicap
+  // Get current handicap - use calculation_details.handicap_index for accurate value
   const latestHandicap = await prisma.handicapHistory.findFirst({
     where: {
       player_id: playerId,
+      calculation_details: {
+        path: ['source'],
+        equals: 'round',
+      },
     },
     orderBy: {
       effective_date: 'desc',
     },
   });
 
-  const currentHandicap = latestHandicap
-    ? Number(latestHandicap.handicap_index)
-    : null;
+  // Extract the calculated handicap from calculation_details, not the DB field
+  // The DB field might be 0 for early rounds before 3 differentials were accumulated
+  let currentHandicap: number | null = null;
+  if (latestHandicap) {
+    const details = latestHandicap.calculation_details as { handicap_index?: number | null } | null;
+    currentHandicap = details?.handicap_index ?? null;
+  }
 
   return {
     totalRounds,
@@ -539,9 +555,15 @@ export async function getPlayerTrends(
       round: {
         include: {
           course: true,
-          tee_set: {
+          tee_set: true,
+          round_nines: {
+            orderBy: { play_order: 'asc' },
             include: {
-              holes: true,
+              nine: {
+                include: {
+                  holes: true,
+                },
+              },
             },
           },
         },
@@ -581,20 +603,24 @@ export async function getPlayerTrends(
   });
 
   // Build handicap trend data - use round date_played, not effective_date
+  // IMPORTANT: Only include entries where a real handicap was calculated (3+ rounds)
   const handicapTrend: TrendDataPoint[] = [];
   for (const history of handicapHistory) {
     const details = history.calculation_details as {
       round_id?: string;
-      handicap_index?: number;
+      handicap_index?: number | null;
     } | null;
 
-    if (details?.round_id) {
+    // Only include entries with a real calculated handicap (not null)
+    // This filters out early rounds before 3 differentials were accumulated
+    if (details?.round_id && details?.handicap_index !== null && details?.handicap_index !== undefined) {
       const rp = roundPlayers.find((r) => r.round_id === details.round_id);
       if (rp) {
         handicapTrend.push({
           // Use the round's date_played, not the handicap history effective_date
           date: rp.round.date_played,
-          value: Number(history.handicap_index),
+          // Use the calculated handicap from calculation_details, NOT the DB field
+          value: details.handicap_index,
           roundId: details.round_id,
           courseName: rp.round.course.name,
         });
@@ -611,7 +637,8 @@ export async function getPlayerTrends(
 
     // Calculate par for holes played
     const holesPlayedIds = new Set(rp.scores.map((s) => s.hole_id));
-    const parForHolesPlayed = rp.round.tee_set.holes
+    const roundHoles = rp.round.round_nines.flatMap((rn) => rn.nine.holes);
+    const parForHolesPlayed = roundHoles
       .filter((h) => holesPlayedIds.has(h.id))
       .reduce((sum, h) => sum + h.par, 0);
 
@@ -682,9 +709,15 @@ export async function getPlayerCourseStats(
       round: {
         include: {
           course: true,
-          tee_set: {
+          tee_set: true,
+          round_nines: {
+            orderBy: { play_order: 'asc' },
             include: {
-              holes: true,
+              nine: {
+                include: {
+                  holes: true,
+                },
+              },
             },
           },
         },
@@ -736,7 +769,8 @@ export async function getPlayerCourseStats(
 
     // Calculate par for holes played
     const holesPlayedIds = new Set(rp.scores.map((s) => s.hole_id));
-    const parForHolesPlayed = rp.round.tee_set.holes
+    const roundHoles = rp.round.round_nines.flatMap((rn) => rn.nine.holes);
+    const parForHolesPlayed = roundHoles
       .filter((h) => holesPlayedIds.has(h.id))
       .reduce((sum, h) => sum + h.par, 0);
 

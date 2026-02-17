@@ -215,13 +215,13 @@ export default function CoursesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold text-golf-text">Courses</h1>
-          <p className="text-gray-600 mt-1">Find and browse golf courses</p>
+          <h1 className="text-2xl font-serif font-bold text-charcoal">Courses</h1>
+          <p className="text-muted mt-1">Find and browse golf courses</p>
         </div>
         <div className="flex items-center gap-3">
           <Link
             href="/courses/new"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-600 transition-colors"
+            className="btn-primary inline-flex items-center gap-2"
           >
             <svg
               className="h-4 w-4"
@@ -240,10 +240,10 @@ export default function CoursesPage() {
           </Link>
           <Link
             href="/courses/favorites"
-            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="btn-outline inline-flex items-center gap-2"
           >
             <svg
-              className="h-4 w-4 text-red-500"
+              className="h-4 w-4 text-secondary"
               fill="currentColor"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -257,7 +257,7 @@ export default function CoursesPage() {
             </svg>
             My Favorites
             {favoriteIds.size > 0 && (
-              <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-700 rounded-full">
+              <span className="px-1.5 py-0.5 text-xs bg-secondary/20 text-secondary rounded-full">
                 {favoriteIds.size}
               </span>
             )}
@@ -266,13 +266,13 @@ export default function CoursesPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      <div className="card p-4">
         <div className="flex flex-col gap-4">
           {/* Search Input */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg
-                className="h-5 w-5 text-gray-400"
+                className="h-5 w-5 text-muted"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -290,12 +290,12 @@ export default function CoursesPage() {
               placeholder="Search courses by name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="block w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+              className="input pl-10"
             />
             {search && (
               <button
                 onClick={() => setSearch('')}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-muted hover:text-charcoal transition-colors"
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -315,7 +315,7 @@ export default function CoursesPage() {
               <select
                 value={state}
                 onChange={(e) => setState(e.target.value)}
-                className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white"
+                className="input"
               >
                 {US_STATES.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -329,7 +329,7 @@ export default function CoursesPage() {
               <select
                 value={courseType}
                 onChange={(e) => setCourseType(e.target.value)}
-                className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white"
+                className="input"
               >
                 {COURSE_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -342,7 +342,7 @@ export default function CoursesPage() {
             {hasActiveFilters && (
               <button
                 onClick={clearFilters}
-                className="px-4 py-2.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="px-4 py-2.5 text-sm font-medium text-muted hover:text-charcoal hover:bg-cream-400 rounded-lg transition-colors"
               >
                 Clear Filters
               </button>
@@ -352,8 +352,8 @@ export default function CoursesPage() {
 
         {/* Results Count */}
         {!isLoading && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
-            <p className="text-sm text-gray-600">
+          <div className="mt-4 pt-4 border-t border-card-border">
+            <p className="text-sm text-muted">
               {pagination.total === 0
                 ? 'No courses found'
                 : `Showing ${courses.length} of ${pagination.total} course${pagination.total !== 1 ? 's' : ''}`}
@@ -364,10 +364,10 @@ export default function CoursesPage() {
 
       {/* Error State */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+        <div className="bg-status-error border border-status-error-text/30 rounded-xl p-4">
           <div className="flex items-center gap-3">
             <svg
-              className="h-5 w-5 text-red-500 flex-shrink-0"
+              className="h-5 w-5 text-status-error-text flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -379,7 +379,7 @@ export default function CoursesPage() {
                 d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <p className="text-red-700">{error}</p>
+            <p className="text-status-error-text">{error}</p>
           </div>
         </div>
       )}
@@ -390,21 +390,21 @@ export default function CoursesPage() {
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 animate-pulse"
+              className="card p-5 animate-pulse"
             >
               <div className="flex justify-between items-start">
                 <div className="flex-1">
-                  <div className="h-5 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-5 bg-cream-400 rounded w-3/4 mb-2"></div>
+                  <div className="h-4 bg-cream-400 rounded w-1/2"></div>
                 </div>
-                <div className="h-8 w-8 bg-gray-200 rounded-full"></div>
+                <div className="h-8 w-8 bg-cream-400 rounded-full"></div>
               </div>
               <div className="flex gap-2 mt-4">
-                <div className="h-6 bg-gray-200 rounded-full w-16"></div>
-                <div className="h-6 bg-gray-200 rounded-full w-20"></div>
+                <div className="h-6 bg-cream-400 rounded-full w-16"></div>
+                <div className="h-6 bg-cream-400 rounded-full w-20"></div>
               </div>
-              <div className="mt-4 pt-4 border-t border-gray-100">
-                <div className="h-10 bg-gray-200 rounded-lg"></div>
+              <div className="mt-4 pt-4 border-t border-card-border">
+                <div className="h-10 bg-cream-400 rounded-lg"></div>
               </div>
             </div>
           ))}
@@ -413,10 +413,10 @@ export default function CoursesPage() {
 
       {/* No Results State */}
       {!isLoading && courses.length === 0 && !error && (
-        <div className="bg-white rounded-xl p-12 text-center shadow-sm border border-gray-100">
-          <div className="h-16 w-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <div className="card p-12 text-center">
+          <div className="h-16 w-16 bg-cream-400 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="h-8 w-8 text-gray-400"
+              className="h-8 w-8 text-muted"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -429,8 +429,8 @@ export default function CoursesPage() {
               />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-golf-text mb-2">No courses found</h3>
-          <p className="text-gray-500 mb-4">
+          <h3 className="text-lg font-serif font-medium text-charcoal mb-2">No courses found</h3>
+          <p className="text-muted mb-4">
             {hasActiveFilters
               ? 'Try adjusting your search or filters'
               : 'No courses are available at this time'}
@@ -438,7 +438,7 @@ export default function CoursesPage() {
           {hasActiveFilters && (
             <button
               onClick={clearFilters}
-              className="text-primary hover:text-primary-600 font-medium transition-colors"
+              className="text-secondary hover:text-secondary-600 font-medium transition-colors"
             >
               Clear all filters
             </button>
@@ -466,7 +466,7 @@ export default function CoursesPage() {
               <button
                 onClick={handleLoadMore}
                 disabled={isLoading}
-                className="px-6 py-3 bg-white border border-gray-200 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-outline disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <span className="flex items-center gap-2">

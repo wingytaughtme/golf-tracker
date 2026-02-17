@@ -49,9 +49,9 @@ interface Course {
 
 const courseTypeBadgeColors: Record<string, string> = {
   public: 'bg-blue-100 text-blue-800',
-  private: 'bg-purple-100 text-purple-800',
+  private: 'bg-secondary/20 text-secondary-700',
   resort: 'bg-amber-100 text-amber-800',
-  municipal: 'bg-green-100 text-green-800',
+  municipal: 'bg-primary/10 text-primary',
 };
 
 export default function CourseDetailPage() {
@@ -178,15 +178,15 @@ export default function CourseDetailPage() {
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <div className="h-6 bg-gray-200 rounded w-1/2 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+        <div className="h-8 bg-cream-400 rounded w-1/3"></div>
+        <div className="card p-6">
+          <div className="h-6 bg-cream-400 rounded w-1/2 mb-4"></div>
+          <div className="h-4 bg-cream-400 rounded w-1/4 mb-2"></div>
+          <div className="h-4 bg-cream-400 rounded w-1/3"></div>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-64"></div>
-          <div className="md:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-64"></div>
+        <div className="grid xl:grid-cols-4 gap-6">
+          <div className="card p-6 h-64"></div>
+          <div className="xl:col-span-3 card p-6 h-64"></div>
         </div>
       </div>
     );
@@ -197,16 +197,16 @@ export default function CourseDetailPage() {
       <div className="space-y-6">
         <Link
           href="/courses"
-          className="inline-flex items-center text-gray-600 hover:text-gray-900"
+          className="inline-flex items-center text-muted hover:text-charcoal"
         >
           <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Back to Courses
         </Link>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
+        <div className="bg-status-error border border-status-error-text/30 rounded-xl p-6 text-center">
           <svg
-            className="h-12 w-12 text-red-400 mx-auto mb-4"
+            className="h-12 w-12 text-status-error-text mx-auto mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -218,8 +218,8 @@ export default function CourseDetailPage() {
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-          <h2 className="text-lg font-semibold text-red-800 mb-2">{error}</h2>
-          <p className="text-red-600">Please try again or go back to the courses list.</p>
+          <h2 className="text-lg font-semibold text-status-error-text mb-2">{error}</h2>
+          <p className="text-status-error-text/80">Please try again or go back to the courses list.</p>
         </div>
       </div>
     );
@@ -232,7 +232,7 @@ export default function CourseDetailPage() {
       {/* Back Link */}
       <Link
         href="/courses"
-        className="inline-flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+        className="inline-flex items-center text-muted hover:text-charcoal transition-colors"
       >
         <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -241,12 +241,12 @@ export default function CourseDetailPage() {
       </Link>
 
       {/* Course Header */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="card overflow-hidden">
         <div className="p-6">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-display font-bold text-golf-text">
+                <h1 className="text-2xl font-serif font-bold text-charcoal">
                   {course.name}
                 </h1>
                 {course.course_type && (
@@ -259,7 +259,7 @@ export default function CourseDetailPage() {
                   </span>
                 )}
               </div>
-              <p className="text-gray-600">
+              <p className="text-muted">
                 {course.address && `${course.address}, `}
                 {course.city}, {course.state}
                 {course.zip_code && ` ${course.zip_code}`}
@@ -272,7 +272,7 @@ export default function CourseDetailPage() {
                   <>
                     <Link
                       href={`/courses/${course.id}/edit`}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-gray-200 hover:border-gray-300 text-gray-600 hover:text-gray-900 transition-all"
+                      className="btn-outline flex items-center gap-2"
                     >
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
@@ -286,7 +286,7 @@ export default function CourseDetailPage() {
                     </Link>
                     <button
                       onClick={() => setShowDeleteModal(true)}
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-gray-200 hover:border-red-300 text-gray-600 hover:text-red-600 transition-all"
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-card-border hover:border-status-error-text/50 text-muted hover:text-status-error-text transition-all"
                     >
                       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
@@ -307,8 +307,8 @@ export default function CourseDetailPage() {
                     isTogglingFavorite ? 'opacity-50 cursor-wait' : ''
                   } ${
                     isFavorite
-                      ? 'border-red-200 bg-red-50 text-red-600'
-                      : 'border-gray-200 hover:border-gray-300 text-gray-600 hover:text-gray-900'
+                      ? 'border-secondary bg-secondary/10 text-secondary-700'
+                      : 'border-card-border hover:border-secondary text-muted hover:text-secondary-600'
                   }`}
                 >
                   <svg
@@ -328,17 +328,17 @@ export default function CourseDetailPage() {
                 </button>
               </div>
               {favoriteError && (
-                <p className="text-red-500 text-xs">{favoriteError}</p>
+                <p className="text-status-error-text text-xs">{favoriteError}</p>
               )}
             </div>
           </div>
 
           {/* Contact Info */}
-          <div className="mt-4 pt-4 border-t border-gray-100 flex flex-wrap gap-4 text-sm">
+          <div className="mt-4 pt-4 border-t border-card-border flex flex-wrap gap-4 text-sm">
             {course.phone && (
               <a
                 href={`tel:${course.phone}`}
-                className="flex items-center gap-2 text-gray-600 hover:text-primary transition-colors"
+                className="flex items-center gap-2 text-muted hover:text-secondary transition-colors"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -356,7 +356,7 @@ export default function CourseDetailPage() {
                 href={course.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-gray-600 hover:text-primary transition-colors"
+                className="flex items-center gap-2 text-muted hover:text-secondary transition-colors"
               >
                 <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -369,7 +369,7 @@ export default function CourseDetailPage() {
                 Visit Website
               </a>
             )}
-            <div className="flex items-center gap-2 text-gray-500">
+            <div className="flex items-center gap-2 text-muted">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -380,7 +380,7 @@ export default function CourseDetailPage() {
               </svg>
               {course.num_holes} holes
             </div>
-            <div className="flex items-center gap-2 text-gray-500">
+            <div className="flex items-center gap-2 text-muted">
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   strokeLinecap="round"
@@ -396,10 +396,10 @@ export default function CourseDetailPage() {
       </div>
 
       {/* Tee Selection and Scorecard */}
-      <div className="grid md:grid-cols-4 gap-6">
+      <div className="grid xl:grid-cols-4 gap-6">
         {/* Tee Selector */}
-        <div className="md:col-span-1">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className="xl:col-span-1">
+          <div className="card p-4">
             <TeeSelector
               teeSets={course.tee_sets}
               selectedTeeId={selectedTeeId}
@@ -410,7 +410,7 @@ export default function CourseDetailPage() {
           {/* Start Round Button */}
           <Link
             href={`/rounds/new?course=${course.id}${selectedTeeId ? `&tee=${selectedTeeId}` : ''}`}
-            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary hover:bg-primary-600 text-white font-medium rounded-xl transition-colors shadow-sm"
+            className="btn-primary mt-4 w-full flex items-center justify-center gap-2"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
@@ -425,12 +425,12 @@ export default function CourseDetailPage() {
         </div>
 
         {/* Hole Table */}
-        <div className="md:col-span-3">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+        <div className="xl:col-span-3">
+          <div className="card p-4">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-golf-text">Scorecard</h2>
+              <h2 className="text-lg font-serif font-semibold text-charcoal">Scorecard</h2>
               {selectedTeeSet && (
-                <div className="text-sm text-gray-500">
+                <div className="text-sm text-muted">
                   <span className="font-medium">{selectedTeeSet.name}</span> Tees &middot;{' '}
                   Rating {selectedTeeSet.course_rating.toString()} / Slope{' '}
                   {selectedTeeSet.slope_rating}
@@ -442,9 +442,11 @@ export default function CourseDetailPage() {
                 holes={selectedTeeSet.holes}
                 totals={selectedTeeSet.totals}
                 teeColor={selectedTeeSet.color}
+                courseRating={selectedTeeSet.course_rating}
+                slopeRating={selectedTeeSet.slope_rating}
               />
             ) : (
-              <div className="text-gray-500 text-center py-8">
+              <div className="text-muted text-center py-8">
                 Select a tee set to view the scorecard.
               </div>
             )}
@@ -468,10 +470,10 @@ export default function CourseDetailPage() {
           />
 
           {/* Modal */}
-          <div className="relative bg-white rounded-xl shadow-xl max-w-md w-full mx-4 p-6">
+          <div className="relative bg-card rounded-xl shadow-xl max-w-md w-full mx-4 p-6 border border-card-border">
             <div className="flex items-center gap-3 mb-4">
-              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
-                <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex-shrink-0 h-10 w-10 rounded-full bg-status-error flex items-center justify-center">
+                <svg className="h-6 w-6 text-status-error-text" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -481,17 +483,17 @@ export default function CourseDetailPage() {
                 </svg>
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">Delete Course</h3>
-                <p className="text-sm text-gray-500">This action cannot be undone</p>
+                <h3 className="text-lg font-semibold text-charcoal">Delete Course</h3>
+                <p className="text-sm text-muted">This action cannot be undone</p>
               </div>
             </div>
 
             <div className="mb-4">
-              <p className="text-sm text-gray-700 mb-3">
+              <p className="text-sm text-charcoal mb-3">
                 This will permanently delete <strong>{course.name}</strong> and all associated data
                 (holes, tee sets, ratings, yardages).
               </p>
-              <p className="text-sm text-gray-700 mb-3">
+              <p className="text-sm text-charcoal mb-3">
                 To confirm, type the course name below:
               </p>
               <input
@@ -499,14 +501,14 @@ export default function CourseDetailPage() {
                 value={deleteConfirmText}
                 onChange={(e) => setDeleteConfirmText(e.target.value)}
                 placeholder={course.name}
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500"
+                className="input focus:border-status-error-text focus:ring-status-error-text"
                 disabled={isDeleting}
               />
             </div>
 
             {deleteError && (
-              <div className="mb-4 rounded-md bg-red-50 p-3">
-                <p className="text-sm text-red-700">{deleteError}</p>
+              <div className="mb-4 rounded-md bg-status-error p-3">
+                <p className="text-sm text-status-error-text">{deleteError}</p>
               </div>
             )}
 
@@ -518,14 +520,14 @@ export default function CourseDetailPage() {
                   setDeleteError(null);
                 }}
                 disabled={isDeleting}
-                className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                className="btn-outline flex-1"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteCourse}
                 disabled={deleteConfirmText !== course.name || isDeleting}
-                className="flex-1 rounded-md bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 rounded-lg bg-status-error-text px-4 py-2 text-sm font-medium text-white hover:bg-status-error-text/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isDeleting ? 'Deleting...' : 'Delete Course'}
               </button>

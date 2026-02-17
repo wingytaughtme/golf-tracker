@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireAuth, requireOwnership } from '@/lib/auth-helpers';
 import { NineType } from '@prisma/client';
 
 interface RouteParams {
@@ -102,16 +101,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Get all holes from nines (sorted by display_order, then hole_number)
     // For 18-hole courses, we need to renumber holes 1-18 (front 1-9, back 10-18)
-    const allHolesFromNines = course.nines.flatMap((nine, nineIndex) =>
-      nine.holes.map((hole) => ({
-        ...hole,
-        nine_id: nine.id,
-        nine_name: nine.name,
-        nine_type: nine.nine_type,
-        // Calculate display hole number (1-9 for first nine, 10-18 for second, etc.)
-        display_hole_number: nineIndex * 9 + hole.hole_number,
-      }))
-    );
+    // IMPORTANT: Filter to unique holes per nine - the migration created holes for each tee_set
+    // so we need to deduplicate by taking only one hole per hole_number per nine
+    const allHolesFromNines = course.nines.flatMap((nine, nineIndex) => {
+      // Deduplicate holes by hole_number (take first occurrence)
+      const uniqueHoles = new Map<number, typeof nine.holes[0]>();
+      for (const hole of nine.holes) {
+        if (!uniqueHoles.has(hole.hole_number)) {
+          uniqueHoles.set(hole.hole_number, hole);
+        }
+      }
+
+      return Array.from(uniqueHoles.values())
+        .sort((a, b) => a.hole_number - b.hole_number)
+        .map((hole) => ({
+          ...hole,
+          nine_id: nine.id,
+          nine_name: nine.name,
+          nine_type: nine.nine_type,
+          // Calculate display hole number (1-9 for first nine, 10-18 for second, etc.)
+          display_hole_number: nineIndex * 9 + hole.hole_number,
+        }));
+    });
 
     // Transform tee sets to include calculated totals
     const teeSetsWithTotals = course.tee_sets.map((teeSet) => {
@@ -120,22 +131,42 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         teeSet.tee_yardages.map((y) => [y.hole_id, y.yardage])
       );
 
-      // Use holes from nines for new model, fall back to teeSet.holes for legacy
-      const holes = allHolesFromNines.length > 0
-        ? allHolesFromNines.map((h) => ({
-            id: h.id,
-            hole_number: h.display_hole_number,
-            par: h.par,
-            handicap_index: h.handicap_index,
-            distance: yardageMap.get(h.id) || 0,
-          }))
-        : teeSet.holes.map((h) => ({
+      // For this tee set, get holes that belong to it (via tee_set_id)
+      // The migration created separate holes per tee set, so use those for accurate yardages
+      const teeSetHoles = teeSet.holes
+        .slice() // Clone to avoid mutation
+        .sort((a, b) => a.hole_number - b.hole_number);
+
+      // If this tee set has its own holes, use those (they have correct distances)
+      // Otherwise fall back to nines holes with yardage lookup
+      let holes;
+      if (teeSetHoles.length > 0) {
+        // Deduplicate by hole_number within this tee set (shouldn't be needed but just in case)
+        const uniqueByNumber = new Map<number, typeof teeSetHoles[0]>();
+        for (const hole of teeSetHoles) {
+          if (!uniqueByNumber.has(hole.hole_number)) {
+            uniqueByNumber.set(hole.hole_number, hole);
+          }
+        }
+        holes = Array.from(uniqueByNumber.values())
+          .sort((a, b) => a.hole_number - b.hole_number)
+          .map((h) => ({
             id: h.id,
             hole_number: h.hole_number,
             par: h.par,
             handicap_index: h.handicap_index,
             distance: yardageMap.get(h.id) || h.distance,
           }));
+      } else {
+        // Fallback to nines holes with yardage lookup
+        holes = allHolesFromNines.map((h) => ({
+          id: h.id,
+          hole_number: h.display_hole_number,
+          par: h.par,
+          handicap_index: h.handicap_index,
+          distance: yardageMap.get(h.id) || 0,
+        }));
+      }
 
       const frontNine = holes.filter((h) => h.hole_number <= 9);
       const backNine = holes.filter((h) => h.hole_number > 9);
@@ -175,26 +206,38 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
 
     // Transform nines with their holes and yardages per tee
-    const ninesWithData = course.nines.map((nine) => ({
-      id: nine.id,
-      name: nine.name,
-      nine_type: nine.nine_type,
-      display_order: nine.display_order,
-      holes: nine.holes.map((hole) => ({
-        id: hole.id,
-        hole_number: hole.hole_number,
-        par: hole.par,
-        handicap_index: hole.handicap_index,
-      })),
-      ratings: nine.tee_nine_ratings.map((r) => ({
-        tee_set_id: r.tee_set_id,
-        tee_set_name: r.tee_set.name,
-        tee_set_color: r.tee_set.color,
-        course_rating: Number(r.course_rating),
-        slope_rating: r.slope_rating,
-      })),
-      total_par: nine.holes.reduce((sum, h) => sum + h.par, 0),
-    }));
+    // Deduplicate holes by hole_number (take first occurrence per nine)
+    const ninesWithData = course.nines.map((nine) => {
+      const uniqueHoles = new Map<number, typeof nine.holes[0]>();
+      for (const hole of nine.holes) {
+        if (!uniqueHoles.has(hole.hole_number)) {
+          uniqueHoles.set(hole.hole_number, hole);
+        }
+      }
+      const dedupedHoles = Array.from(uniqueHoles.values())
+        .sort((a, b) => a.hole_number - b.hole_number);
+
+      return {
+        id: nine.id,
+        name: nine.name,
+        nine_type: nine.nine_type,
+        display_order: nine.display_order,
+        holes: dedupedHoles.map((hole) => ({
+          id: hole.id,
+          hole_number: hole.hole_number,
+          par: hole.par,
+          handicap_index: hole.handicap_index,
+        })),
+        ratings: nine.tee_nine_ratings.map((r) => ({
+          tee_set_id: r.tee_set_id,
+          tee_set_name: r.tee_set.name,
+          tee_set_color: r.tee_set.color,
+          course_rating: Number(r.course_rating),
+          slope_rating: r.slope_rating,
+        })),
+        total_par: dedupedHoles.reduce((sum, h) => sum + h.par, 0),
+      };
+    });
 
     return NextResponse.json({
       id: course.id,
@@ -226,11 +269,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id } = await params;
 
@@ -256,12 +296,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (course.created_by !== session.user.id) {
-      return NextResponse.json(
-        { error: 'You can only delete courses you created' },
-        { status: 403 }
-      );
-    }
+    const { error: ownerError } = requireOwnership(course.created_by, session);
+    if (ownerError) return ownerError;
 
     // Check if course has any rounds
     if (course._count.rounds > 0) {
@@ -290,11 +326,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id } = await params;
     const body: UpdateCourseInput = await request.json();
@@ -316,12 +349,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    if (course.created_by !== session.user.id) {
-      return NextResponse.json(
-        { error: 'You can only edit courses you created' },
-        { status: 403 }
-      );
-    }
+    const { error: ownerError } = requireOwnership(course.created_by, session);
+    if (ownerError) return ownerError;
 
     // Validate required fields
     if (!body.name?.trim()) {

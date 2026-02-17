@@ -105,8 +105,8 @@ export default function PlayerForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Name */}
       <div>
-        <label htmlFor="player-name" className="block text-sm font-medium text-gray-700 mb-1">
-          Name <span className="text-red-500">*</span>
+        <label htmlFor="player-name" className="label">
+          Name <span className="text-score-triple">*</span>
         </label>
         <input
           type="text"
@@ -114,45 +114,45 @@ export default function PlayerForm({
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
-          className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+          className="input"
           placeholder="John Smith"
         />
       </div>
 
       {/* Email */}
       <div>
-        <label htmlFor="player-email" className="block text-sm font-medium text-gray-700 mb-1">
-          Email <span className="text-gray-400">(optional)</span>
+        <label htmlFor="player-email" className="label">
+          Email <span className="text-muted">(optional)</span>
         </label>
         <input
           type="email"
           id="player-email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+          className="input"
           placeholder="john@example.com"
         />
       </div>
 
       {/* GHIN Number */}
       <div>
-        <label htmlFor="player-ghin" className="block text-sm font-medium text-gray-700 mb-1">
-          GHIN Number <span className="text-gray-400">(optional)</span>
+        <label htmlFor="player-ghin" className="label">
+          GHIN Number <span className="text-muted">(optional)</span>
         </label>
         <input
           type="text"
           id="player-ghin"
           value={ghinNumber}
           onChange={(e) => setGhinNumber(e.target.value)}
-          className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+          className="input"
           placeholder="1234567"
         />
       </div>
 
       {/* Handicap */}
       <div>
-        <label htmlFor="player-handicap" className="block text-sm font-medium text-gray-700 mb-1">
-          Handicap Index <span className="text-gray-400">(optional)</span>
+        <label htmlFor="player-handicap" className="label">
+          Handicap Index <span className="text-muted">(optional)</span>
         </label>
         <input
           type="number"
@@ -162,22 +162,22 @@ export default function PlayerForm({
           step="0.1"
           min="-10"
           max="54"
-          className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+          className="input"
           placeholder="12.5"
         />
       </div>
 
       {/* Home Course */}
       <div>
-        <label htmlFor="player-home-course" className="block text-sm font-medium text-gray-700 mb-1">
-          Home Course <span className="text-gray-400">(optional)</span>
+        <label htmlFor="player-home-course" className="label">
+          Home Course <span className="text-muted">(optional)</span>
         </label>
         <select
           id="player-home-course"
           value={homeCourseId}
           onChange={(e) => setHomeCourseId(e.target.value)}
           disabled={isLoadingCourses}
-          className="block w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors bg-white disabled:bg-gray-50 disabled:text-gray-500"
+          className="input bg-card disabled:bg-cream-300 disabled:text-muted"
         >
           <option value="">
             {isLoadingCourses ? 'Loading courses...' : 'Select a home course'}
@@ -192,8 +192,8 @@ export default function PlayerForm({
 
       {/* Error */}
       {displayError && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-700 text-sm">{displayError}</p>
+        <div className="p-3 bg-status-error border border-status-error-text/30 rounded-lg">
+          <p className="text-status-error-text text-sm">{displayError}</p>
         </div>
       )}
 
@@ -203,14 +203,14 @@ export default function PlayerForm({
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="flex-1 px-4 py-2.5 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium transition-colors disabled:opacity-50"
+          className="btn-outline flex-1"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isLoading || !name.trim()}
-          className="flex-1 px-4 py-2.5 text-white bg-primary rounded-lg hover:bg-primary-600 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn-primary flex-1"
         >
           {isLoading ? 'Saving...' : submitLabel}
         </button>

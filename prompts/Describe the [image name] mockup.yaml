@@ -1,0 +1,166 @@
+Describe the [image name] mockup.  Fill it out in the format described below:
+
+  Analyze this UI mockup and extract detailed design specifications that a developer can use to implement this design in code. Be precise with values.
+
+  Provide specifications in this exact format:
+
+  ## COLOR PALETTE
+  - Primary color (main brand color): [hex code]
+  - Secondary color: [hex code]
+  - Accent color: [hex code]
+  - Background colors:
+    - Page background: [hex code]
+    - Card/surface background: [hex code]
+    - Header/navbar background: [hex code]
+  - Text colors:
+    - Primary text: [hex code]
+    - Secondary/muted text: [hex code]
+    - Link text: [hex code]
+  - State colors:
+    - Success/positive: [hex code]
+    - Warning: [hex code]
+    - Error/negative: [hex code]
+  - Border colors: [hex codes]
+
+  ## TYPOGRAPHY
+  - Heading font family: [font name, e.g., "Playfair Display", serif]
+  - Body font family: [font name, e.g., "Inter", sans-serif]
+  - Font sizes:
+    - Page title (h1): [size in px or rem]
+    - Section headers (h2): [size]
+    - Card titles (h3): [size]
+    - Body text: [size]
+    - Small/caption text: [size]
+  - Font weights used: [e.g., 400, 500, 600, 700]
+  - Line heights: [values]
+  - Letter spacing if notable: [values]
+
+  ## SPACING & LAYOUT
+  - Page max-width: [px value]
+  - Page padding/margins: [values]
+  - Card padding: [values]
+  - Gap between cards/sections: [values]
+  - Grid columns: [number and widths]
+  - Standard spacing scale: [e.g., 4px, 8px, 16px, 24px, 32px]
+
+  ## BORDERS & CORNERS
+  - Border radius:
+    - Cards: [px value]
+    - Buttons: [px value]
+    - Inputs: [px value]
+    - Badges/pills: [px value]
+  - Border widths: [values]
+  - Border styles: [solid, dashed, etc.]
+
+  ## SHADOWS
+  - Card shadows: [CSS box-shadow value, e.g., "0 2px 8px rgba(0,0,0,0.1)"]
+  - Elevated elements: [shadow values]
+  - Hover state shadows: [shadow values]
+
+  ## BUTTONS
+  - Primary button:
+    - Background: [hex]
+    - Text color: [hex]
+    - Padding: [values]
+    - Border radius: [px]
+    - Font weight: [value]
+    - Hover state: [describe changes]
+  - Secondary button: [same details]
+  - Text/link button: [same details]
+
+  ## FORM INPUTS
+  - Background color: [hex]
+  - Border color: [hex]
+  - Border color on focus: [hex]
+  - Padding: [values]
+  - Border radius: [px]
+  - Placeholder text color: [hex]
+
+  ## CARDS
+  - Background: [hex]
+  - Border: [describe - color, width, style]
+  - Shadow: [value]
+  - Padding: [values]
+  - Hover state: [describe]
+
+  ## NAVIGATION/HEADER
+  - Height: [px]
+  - Background: [hex]
+  - Logo position: [left/center]
+  - Nav link styling: [describe]
+  - Active link indicator: [describe]
+
+  ## TABLES (if present)
+  - Header row background: [hex]
+  - Header text color: [hex]
+  - Row background: [hex]
+  - Alternate row background: [hex if striped]
+  - Border/divider style: [describe]
+  - Cell padding: [values]
+
+  ## BADGES/PILLS
+  - Border radius: [px]
+  - Padding: [values]
+  - Font size: [value]
+  - Variants: [list each color variant with bg/text colors]
+
+  ## ICONS
+  - Size: [px values for different contexts]
+  - Color: [how colored - inherit, specific hex]
+  - Style: [outline, filled, etc.]
+
+  ## DECORATIVE ELEMENTS
+  - Accent lines/borders: [describe placement, color, width]
+  - Textures: [describe any patterns or textures]
+  - Dividers: [style and placement]
+
+  ## SPECIFIC COMPONENT NOTES
+  [List any unique styling for specific components visible in this mockup]
+
+  ## LAYOUT STRUCTURE
+  [Describe the overall page layout - sidebar position, content width, grid structure]
+
+  ---
+  Prompt 2: Component-by-Component Breakdown
+
+  For more detailed implementation guidance, also use this prompt:
+
+  For each distinct UI component visible in this mockup, provide implementation details:
+
+  ## COMPONENT INVENTORY
+
+  For each component, provide:
+
+  ### [Component Name] (e.g., "Stats Card", "Recent Rounds Table", "Course Card")
+
+  **Purpose:** [What this component displays/does]
+
+  **Layout:**
+  - Container type: [flex/grid]
+  - Direction: [row/column]
+  - Alignment: [how items are aligned]
+  - Dimensions: [width, height, aspect ratio]
+
+  **Visual Styling:**
+  - Background: [hex or gradient]
+  - Border: [width color style radius]
+  - Shadow: [value]
+  - Padding: [top right bottom left]
+  - Margin: [if notable]
+
+  **Typography within:**
+  - Title: [font, size, weight, color]
+  - Subtitle/description: [font, size, weight, color]
+  - Data/numbers: [font, size, weight, color]
+
+  **Child Elements:**
+  - [List each sub-element with its styling]
+
+  **States:**
+  - Default: [describe]
+  - Hover: [describe changes]
+  - Active/Selected: [describe changes]
+  - Disabled: [if applicable]
+
+  **Responsive Behavior:**
+  - On smaller screens: [how should it adapt]

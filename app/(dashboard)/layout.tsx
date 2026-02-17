@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import Header from '@/components/layout/header';
 import MobileNav from '@/components/layout/nav';
 import Footer from '@/components/layout/footer';
-import SessionProvider from '@/components/providers/session-provider';
+import ClientProviders from '@/components/providers/client-providers';
 
 export default async function DashboardLayout({
   children,
@@ -18,8 +18,8 @@ export default async function DashboardLayout({
   }
 
   return (
-    <SessionProvider>
-      <div className="min-h-screen flex flex-col bg-golf-background">
+    <ClientProviders>
+      <div className="min-h-screen flex flex-col bg-cream">
         <Header />
         <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
           {children}
@@ -27,6 +27,6 @@ export default async function DashboardLayout({
         <Footer />
         <MobileNav />
       </div>
-    </SessionProvider>
+    </ClientProviders>
   );
 }

@@ -13,6 +13,6 @@ export default defineConfig({
   engine: "classic",
   datasource: {
     // Use DIRECT_URL (session pooler) for migrations
-    url: process.env.DIRECT_URL || process.env.DATABASE_URL,
+    url: (process.env.DIRECT_URL || process.env.DATABASE_URL) as string,
   },
 });

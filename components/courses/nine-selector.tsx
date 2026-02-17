@@ -119,7 +119,7 @@ export default function NineSelector({
     return (
       <div className="space-y-3">
         {[1, 2].map((i) => (
-          <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+          <div key={i} className="h-20 bg-cream-300 rounded-lg animate-pulse" />
         ))}
       </div>
     );
@@ -127,8 +127,8 @@ export default function NineSelector({
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <p className="text-red-700 text-sm">{error}</p>
+      <div className="bg-status-error border border-status-error-text/30 rounded-lg p-4">
+        <p className="text-status-error-text text-sm">{error}</p>
       </div>
     );
   }
@@ -137,17 +137,17 @@ export default function NineSelector({
   if (nines.length === 1) {
     const nine = nines[0];
     return (
-      <div className="bg-gray-50 rounded-lg p-4">
+      <div className="bg-cream-300 rounded-lg p-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 bg-green-100 text-green-600 rounded-full flex items-center justify-center">
+          <div className="h-10 w-10 bg-primary/10 text-primary rounded-full flex items-center justify-center">
             <span className="text-sm font-semibold">9</span>
           </div>
           <div>
-            <p className="font-medium text-golf-text">{nine.name}</p>
-            <p className="text-sm text-gray-500">Par {nine.total_par}</p>
+            <p className="font-medium text-charcoal">{nine.name}</p>
+            <p className="text-sm text-muted">Par {nine.total_par}</p>
           </div>
         </div>
-        <p className="mt-2 text-xs text-gray-400">This is a 9-hole course</p>
+        <p className="mt-2 text-xs text-muted">This is a 9-hole course</p>
       </div>
     );
   }
@@ -156,7 +156,7 @@ export default function NineSelector({
     <div className="space-y-4">
       {/* Available Nines */}
       <div className="space-y-2">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-muted">
           Select {minNines === maxNines ? minNines : `${minNines}-${maxNines}`} nine(s) to play
         </p>
 
@@ -171,16 +171,16 @@ export default function NineSelector({
                 onClick={() => handleNineToggle(nine)}
                 className={`flex items-center gap-4 p-4 border rounded-lg text-left transition-all ${
                   isSelected
-                    ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-secondary bg-secondary/10 ring-2 ring-secondary/20'
+                    : 'border-card-border hover:border-secondary/50 hover:bg-cream-200'
                 }`}
               >
                 {/* Selection indicator with order number */}
                 <div
                   className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-bold ${
                     isSelected
-                      ? 'bg-primary text-white'
-                      : 'bg-gray-100 text-gray-400'
+                      ? 'bg-secondary text-secondary-900'
+                      : 'bg-cream-300 text-muted'
                   }`}
                 >
                   {isSelected ? playOrder + 1 : ''}
@@ -188,10 +188,10 @@ export default function NineSelector({
 
                 {/* Nine info */}
                 <div className="flex-1">
-                  <p className="font-medium text-golf-text">{nine.name}</p>
-                  <div className="flex items-center gap-3 text-sm text-gray-500 mt-0.5">
+                  <p className="font-medium text-charcoal">{nine.name}</p>
+                  <div className="flex items-center gap-3 text-sm text-muted mt-0.5">
                     <span>Par {nine.total_par}</span>
-                    <span className="text-xs px-2 py-0.5 bg-gray-100 rounded capitalize">
+                    <span className="text-xs px-2 py-0.5 bg-cream-300 rounded capitalize">
                       {nine.nine_type === 'front' ? 'Front 9' :
                        nine.nine_type === 'back' ? 'Back 9' :
                        'Named 9'}
@@ -202,7 +202,7 @@ export default function NineSelector({
                 {/* Checkmark */}
                 <div
                   className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-                    isSelected ? 'border-primary bg-primary' : 'border-gray-300'
+                    isSelected ? 'border-secondary bg-secondary' : 'border-card-border'
                   }`}
                 >
                   {isSelected && (
@@ -223,9 +223,9 @@ export default function NineSelector({
 
       {/* Selected Order */}
       {selectedNineIds.length > 1 && (
-        <div className="border-t border-gray-100 pt-4">
-          <p className="text-sm font-medium text-gray-700 mb-2">Play Order</p>
-          <p className="text-xs text-gray-500 mb-3">Drag or use arrows to reorder which nine you play first</p>
+        <div className="border-t border-card-border pt-4">
+          <p className="text-sm font-medium text-charcoal mb-2">Play Order</p>
+          <p className="text-xs text-muted mb-3">Drag or use arrows to reorder which nine you play first</p>
 
           <div className="space-y-2">
             {selectedNineIds.map((nineId, index) => {
@@ -235,12 +235,12 @@ export default function NineSelector({
               return (
                 <div
                   key={nineId}
-                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center gap-3 p-3 bg-cream-300 rounded-lg"
                 >
-                  <span className="text-sm font-semibold text-gray-400 w-6">
+                  <span className="text-sm font-semibold text-muted w-6">
                     {index + 1}.
                   </span>
-                  <span className="flex-1 font-medium text-golf-text">{nine.name}</span>
+                  <span className="flex-1 font-medium text-charcoal">{nine.name}</span>
                   <div className="flex gap-1">
                     <button
                       onClick={(e) => {
@@ -248,7 +248,7 @@ export default function NineSelector({
                         moveNineUp(index);
                       }}
                       disabled={index === 0}
-                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="p-1 text-muted hover:text-charcoal disabled:opacity-30 disabled:cursor-not-allowed"
                       aria-label="Move up"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -261,7 +261,7 @@ export default function NineSelector({
                         moveNineDown(index);
                       }}
                       disabled={index === selectedNineIds.length - 1}
-                      className="p-1 text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="p-1 text-muted hover:text-charcoal disabled:opacity-30 disabled:cursor-not-allowed"
                       aria-label="Move down"
                     >
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

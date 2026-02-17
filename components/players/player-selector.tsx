@@ -91,16 +91,16 @@ export default function PlayerSelector({
   if (isLoading) {
     return (
       <div className="animate-pulse space-y-3">
-        <div className="h-10 bg-gray-200 rounded-lg"></div>
-        <div className="h-10 bg-gray-200 rounded-lg"></div>
-        <div className="h-10 bg-gray-200 rounded-lg"></div>
+        <div className="h-10 bg-cream-300 rounded-lg"></div>
+        <div className="h-10 bg-cream-300 rounded-lg"></div>
+        <div className="h-10 bg-cream-300 rounded-lg"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+      <div className="p-4 bg-status-error border border-status-error-text/30 rounded-lg text-status-error-text text-sm">
         {error}
       </div>
     );
@@ -116,13 +116,13 @@ export default function PlayerSelector({
               key={player.id}
               className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium ${
                 player.is_user
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-gray-100 text-gray-700'
+                  ? 'bg-secondary/20 text-secondary-700'
+                  : 'bg-cream-300 text-charcoal'
               }`}
             >
               <span
                 className={`h-6 w-6 rounded-full flex items-center justify-center text-xs font-semibold ${
-                  player.is_user ? 'bg-primary/20' : 'bg-gray-200'
+                  player.is_user ? 'bg-secondary/30' : 'bg-cream-400'
                 }`}
               >
                 {player.name.charAt(0).toUpperCase()}
@@ -150,20 +150,20 @@ export default function PlayerSelector({
 
       {/* Player Count */}
       <div className="flex items-center justify-between text-sm">
-        <span className="text-gray-500">
+        <span className="text-muted">
           {selectedPlayerIds.length} of {maxPlayers} players selected
         </span>
         {selectedPlayerIds.length >= maxPlayers && (
-          <span className="text-amber-600">Maximum reached</span>
+          <span className="text-score-bogey">Maximum reached</span>
         )}
       </div>
 
       {/* Player List */}
-      <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 max-h-64 overflow-y-auto">
+      <div className="border border-card-border rounded-lg divide-y divide-card-border max-h-64 overflow-y-auto">
         {/* Current User */}
         {ownPlayer && (
           <label
-            className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+            className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-cream-200 transition-colors ${
               requireCurrentUser ? 'opacity-75' : ''
             }`}
           >
@@ -172,20 +172,20 @@ export default function PlayerSelector({
               checked={selectedPlayerIds.includes(ownPlayer.id)}
               onChange={() => togglePlayer(ownPlayer.id)}
               disabled={requireCurrentUser && selectedPlayerIds.includes(ownPlayer.id)}
-              className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary disabled:opacity-50"
+              className="h-4 w-4 text-secondary border-card-border rounded focus:ring-secondary disabled:opacity-50"
             />
             <div
-              className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold"
+              className="h-8 w-8 rounded-full bg-secondary/20 text-secondary-700 flex items-center justify-center text-sm font-semibold"
             >
               {ownPlayer.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-medium text-golf-text truncate">{ownPlayer.name}</span>
-                <span className="px-1.5 py-0.5 text-xs bg-primary/10 text-primary rounded">You</span>
+                <span className="font-medium text-charcoal truncate">{ownPlayer.name}</span>
+                <span className="px-1.5 py-0.5 text-xs bg-secondary/20 text-secondary-700 rounded">You</span>
               </div>
               {ownPlayer.current_handicap !== null && ownPlayer.current_handicap !== undefined && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted">
                   HCP: {Number(ownPlayer.current_handicap).toFixed(1)}
                 </p>
               )}
@@ -197,7 +197,7 @@ export default function PlayerSelector({
         {guestPlayers.map((player) => (
           <label
             key={player.id}
-            className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors ${
+            className={`flex items-center gap-3 p-3 cursor-pointer hover:bg-cream-200 transition-colors ${
               selectedPlayerIds.length >= maxPlayers && !selectedPlayerIds.includes(player.id)
                 ? 'opacity-50 cursor-not-allowed'
                 : ''
@@ -208,17 +208,17 @@ export default function PlayerSelector({
               checked={selectedPlayerIds.includes(player.id)}
               onChange={() => togglePlayer(player.id)}
               disabled={selectedPlayerIds.length >= maxPlayers && !selectedPlayerIds.includes(player.id)}
-              className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary disabled:opacity-50"
+              className="h-4 w-4 text-secondary border-card-border rounded focus:ring-secondary disabled:opacity-50"
             />
             <div
-              className="h-8 w-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center text-sm font-semibold"
+              className="h-8 w-8 rounded-full bg-cream-300 text-muted flex items-center justify-center text-sm font-semibold"
             >
               {player.name.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <span className="font-medium text-golf-text truncate block">{player.name}</span>
+              <span className="font-medium text-charcoal truncate block">{player.name}</span>
               {player.current_handicap !== null && player.current_handicap !== undefined && (
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-muted">
                   HCP: {Number(player.current_handicap).toFixed(1)}
                 </p>
               )}
@@ -228,7 +228,7 @@ export default function PlayerSelector({
 
         {/* Empty State */}
         {guestPlayers.length === 0 && (
-          <div className="p-4 text-center text-gray-500 text-sm">
+          <div className="p-4 text-center text-muted text-sm">
             No playing partners yet
           </div>
         )}

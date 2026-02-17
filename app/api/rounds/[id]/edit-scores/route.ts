@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireAuth, requireOwnership } from '@/lib/auth-helpers';
 
 interface ScoreUpdate {
   scoreId: string;
@@ -27,14 +26,8 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id: roundId } = await params;
     const body = await request.json();
@@ -76,13 +69,9 @@ export async function POST(
       );
     }
 
-    // Verify user has access (must be the creator)
-    if (round.created_by !== session.user.id) {
-      return NextResponse.json(
-        { error: 'Only the round creator can edit scores' },
-        { status: 403 }
-      );
-    }
+    // Verify user has access (must be the creator or admin)
+    const { error: ownerError } = requireOwnership(round.created_by, session);
+    if (ownerError) return ownerError;
 
     // Only allow editing completed rounds (in_progress rounds use the normal flow)
     if (round.status !== 'completed') {
@@ -202,7 +191,6 @@ export async function POST(
 
       const courseRating = Number(round.tee_set.course_rating);
       const slopeRating = round.tee_set.slope_rating;
-      const totalPar = round.tee_set.holes.reduce((sum, h) => sum + h.par, 0);
 
       for (const roundPlayerId of affectedPlayerIds) {
         // Get updated scores for this player
@@ -288,14 +276,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error: authError } = await requireAuth();
+    if (authError) return authError;
 
     const { id: roundId } = await params;
 

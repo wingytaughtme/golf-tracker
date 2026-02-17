@@ -157,7 +157,7 @@ export default function RoundSetupWizard() {
       <StepIndicator steps={STEPS} currentStep={currentStep} />
 
       {/* Step Content */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="card p-6">
         {currentStep === 1 && (
           <CourseSelectionStep
             selectedCourse={wizardData.course}
@@ -206,8 +206,8 @@ export default function RoundSetupWizard() {
 
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-700 text-sm">{error}</p>
+        <div className="bg-status-error border border-status-error-text/30 rounded-lg p-4">
+          <p className="text-status-error-text text-sm">{error}</p>
         </div>
       )}
 
@@ -216,7 +216,7 @@ export default function RoundSetupWizard() {
         <button
           onClick={handleBack}
           disabled={currentStep === 1}
-          className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-4 py-2 text-muted hover:text-charcoal disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Back
         </button>
@@ -225,7 +225,7 @@ export default function RoundSetupWizard() {
           <button
             onClick={handleNext}
             disabled={!canProceed()}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Next
           </button>
@@ -233,7 +233,7 @@ export default function RoundSetupWizard() {
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || !canProceed()}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'Starting Round...' : 'Start Round'}
           </button>
@@ -254,10 +254,10 @@ function StepIndicator({ steps, currentStep }: { steps: typeof STEPS; currentSte
               <div
                 className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
                   step.id < currentStep
-                    ? 'bg-primary border-primary'
+                    ? 'bg-secondary border-secondary'
                     : step.id === currentStep
-                    ? 'border-primary bg-white'
-                    : 'border-gray-300 bg-white'
+                    ? 'border-secondary bg-card'
+                    : 'border-card-border bg-card'
                 }`}
               >
                 {step.id < currentStep ? (
@@ -271,7 +271,7 @@ function StepIndicator({ steps, currentStep }: { steps: typeof STEPS; currentSte
                 ) : (
                   <span
                     className={`text-sm font-medium ${
-                      step.id === currentStep ? 'text-primary' : 'text-gray-500'
+                      step.id === currentStep ? 'text-secondary-700' : 'text-muted'
                     }`}
                   >
                     {step.id}
@@ -281,7 +281,7 @@ function StepIndicator({ steps, currentStep }: { steps: typeof STEPS; currentSte
               <div className="ml-3 hidden sm:block">
                 <p
                   className={`text-sm font-medium ${
-                    step.id <= currentStep ? 'text-primary' : 'text-gray-500'
+                    step.id <= currentStep ? 'text-secondary-700' : 'text-muted'
                   }`}
                 >
                   {step.name}
@@ -290,7 +290,7 @@ function StepIndicator({ steps, currentStep }: { steps: typeof STEPS; currentSte
               {index !== steps.length - 1 && (
                 <div
                   className={`ml-4 flex-1 h-0.5 ${
-                    step.id < currentStep ? 'bg-primary' : 'bg-gray-200'
+                    step.id < currentStep ? 'bg-secondary' : 'bg-card-border'
                   }`}
                 />
               )}
@@ -387,14 +387,14 @@ function CourseSelectionStep({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-golf-text mb-2">Select a Course</h2>
-        <p className="text-gray-500 text-sm">Search for a course or select from your favorites</p>
+        <h2 className="text-lg font-semibold text-charcoal mb-2">Select a Course</h2>
+        <p className="text-muted text-sm">Search for a course or select from your favorites</p>
       </div>
 
       {/* Search Input */}
       <div className="relative">
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400"
+          className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -411,11 +411,11 @@ function CourseSelectionStep({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Search courses..."
-          className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          className="input pl-10"
         />
         {isSearching && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
+            <div className="animate-spin h-5 w-5 border-2 border-secondary border-t-transparent rounded-full" />
           </div>
         )}
       </div>
@@ -423,8 +423,8 @@ function CourseSelectionStep({
       {/* Search Results */}
       {searchQuery && searchResults.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-500">Search Results</h3>
-          <div className="border border-gray-200 rounded-lg divide-y divide-gray-100">
+          <h3 className="text-sm font-medium text-muted">Search Results</h3>
+          <div className="border border-card-border rounded-lg divide-y divide-card-border">
             {searchResults.map((course) => (
               <CourseListItem
                 key={course.id}
@@ -440,8 +440,8 @@ function CourseSelectionStep({
       {/* Recent Courses */}
       {!searchQuery && recentCourses.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-500">Recent Courses</h3>
-          <div className="border border-gray-200 rounded-lg divide-y divide-gray-100">
+          <h3 className="text-sm font-medium text-muted">Recent Courses</h3>
+          <div className="border border-card-border rounded-lg divide-y divide-card-border">
             {recentCourses.map((course) => (
               <CourseListItem
                 key={course.id}
@@ -457,15 +457,15 @@ function CourseSelectionStep({
       {/* Favorite Courses */}
       {!searchQuery && (
         <div className="space-y-2">
-          <h3 className="text-sm font-medium text-gray-500">Favorite Courses</h3>
+          <h3 className="text-sm font-medium text-muted">Favorite Courses</h3>
           {isLoadingFavorites ? (
             <div className="animate-pulse space-y-2">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded-lg" />
+                <div key={i} className="h-16 bg-cream-400 rounded-lg" />
               ))}
             </div>
           ) : favorites.length > 0 ? (
-            <div className="border border-gray-200 rounded-lg divide-y divide-gray-100">
+            <div className="border border-card-border rounded-lg divide-y divide-card-border">
               {favorites.map((course) => (
                 <CourseListItem
                   key={course.id}
@@ -477,9 +477,9 @@ function CourseSelectionStep({
               ))}
             </div>
           ) : (
-            <div className="text-center py-6 bg-gray-50 rounded-lg">
-              <p className="text-gray-500 text-sm">No favorite courses yet</p>
-              <p className="text-gray-400 text-xs mt-1">Use search to find a course</p>
+            <div className="text-center py-6 bg-cream-300 rounded-lg">
+              <p className="text-muted text-sm">No favorite courses yet</p>
+              <p className="text-muted/70 text-xs mt-1">Use search to find a course</p>
             </div>
           )}
         </div>
@@ -502,13 +502,13 @@ function CourseListItem({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors ${
-        selected ? 'bg-primary/5' : ''
+      className={`w-full flex items-center gap-3 p-4 text-left hover:bg-cream-300 transition-colors ${
+        selected ? 'bg-secondary/10' : ''
       }`}
     >
       <div
         className={`h-10 w-10 rounded-full flex items-center justify-center ${
-          isFavorite ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'
+          isFavorite ? 'bg-secondary/20 text-secondary-700' : 'bg-primary/10 text-primary'
         }`}
       >
         {isFavorite ? (
@@ -533,12 +533,12 @@ function CourseListItem({
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-golf-text truncate">{course.name}</p>
-        <p className="text-sm text-gray-500">
+        <p className="font-medium text-charcoal truncate">{course.name}</p>
+        <p className="text-sm text-muted">
           {course.city}, {course.state}
         </p>
       </div>
-      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="h-5 w-5 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
       </svg>
     </button>
@@ -595,35 +595,35 @@ function TeeSelectionStep({
       <div>
         <button
           onClick={onBack}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-2"
+          className="flex items-center gap-1 text-sm text-muted hover:text-charcoal mb-2"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Change course
         </button>
-        <h2 className="text-lg font-semibold text-golf-text">{course.name}</h2>
-        <p className="text-gray-500 text-sm">
+        <h2 className="text-lg font-semibold text-charcoal">{course.name}</h2>
+        <p className="text-muted text-sm">
           {course.city}, {course.state}
         </p>
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-3">Select Tee Set</h3>
+        <h3 className="text-sm font-medium text-charcoal mb-3">Select Tee Set</h3>
 
         {isLoading ? (
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="h-20 bg-gray-100 rounded-lg animate-pulse" />
+              <div key={i} className="h-20 bg-cream-400 rounded-lg animate-pulse" />
             ))}
           </div>
         ) : error ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-700 text-sm">{error}</p>
+          <div className="bg-status-error border border-status-error-text/30 rounded-lg p-4">
+            <p className="text-status-error-text text-sm">{error}</p>
           </div>
         ) : teeSets.length === 0 ? (
-          <div className="text-center py-8 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">No tee sets available for this course</p>
+          <div className="text-center py-8 bg-cream-300 rounded-lg">
+            <p className="text-muted">No tee sets available for this course</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -633,25 +633,25 @@ function TeeSelectionStep({
                 onClick={() => onSelect(teeSet)}
                 className={`w-full flex items-center gap-4 p-4 border rounded-lg text-left transition-all ${
                   selectedTeeSet?.id === teeSet.id
-                    ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    ? 'border-secondary bg-secondary/10 ring-2 ring-secondary/20'
+                    : 'border-card-border hover:border-secondary/50 hover:bg-cream-300'
                 }`}
               >
                 <div className={`h-6 w-6 rounded-full ${getTeeColor(teeSet.color)}`} />
                 <div className="flex-1">
-                  <p className="font-medium text-golf-text">{teeSet.name}</p>
-                  <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                  <p className="font-medium text-charcoal">{teeSet.name}</p>
+                  <div className="flex items-center gap-4 text-sm text-muted mt-1">
                     <span>{teeSet.total_yardage?.toLocaleString()} yds</span>
                     <span>Rating: {Number(teeSet.course_rating).toFixed(1)}</span>
                     <span>Slope: {teeSet.slope_rating}</span>
                     {teeSet.gender && (
-                      <span className="text-xs px-2 py-0.5 bg-gray-100 rounded">{teeSet.gender}</span>
+                      <span className="text-xs px-2 py-0.5 bg-cream-400 rounded">{teeSet.gender}</span>
                     )}
                   </div>
                 </div>
                 <div
                   className={`h-5 w-5 rounded-full border-2 flex items-center justify-center ${
-                    selectedTeeSet?.id === teeSet.id ? 'border-primary bg-primary' : 'border-gray-300'
+                    selectedTeeSet?.id === teeSet.id ? 'border-secondary bg-secondary' : 'border-card-border'
                   }`}
                 >
                   {selectedTeeSet?.id === teeSet.id && (
@@ -690,15 +690,15 @@ function NineSelectionStep({
       <div>
         <button
           onClick={onBack}
-          className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-2"
+          className="flex items-center gap-1 text-sm text-muted hover:text-charcoal mb-2"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
           Change tees
         </button>
-        <h2 className="text-lg font-semibold text-golf-text">Select Nines to Play</h2>
-        <p className="text-gray-500 text-sm mt-1">
+        <h2 className="text-lg font-semibold text-charcoal">Select Nines to Play</h2>
+        <p className="text-muted text-sm mt-1">
           Choose which nines you&apos;ll be playing for this round
         </p>
       </div>
@@ -786,8 +786,8 @@ function PlayerSelectionStep({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-golf-text mb-2">Select Players</h2>
-        <p className="text-gray-500 text-sm">Choose who&apos;s playing in this round (max 4)</p>
+        <h2 className="text-lg font-semibold text-charcoal mb-2">Select Players</h2>
+        <p className="text-muted text-sm">Choose who&apos;s playing in this round (max 4)</p>
       </div>
 
       <PlayerSelector
@@ -800,21 +800,21 @@ function PlayerSelectionStep({
       {/* Playing Handicaps */}
       {players.length > 0 && (
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-gray-700">Playing Handicaps</h3>
+          <h3 className="text-sm font-medium text-charcoal">Playing Handicaps</h3>
           <div className="space-y-2">
             {players.map((player) => (
               <div
                 key={player.player_id}
-                className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                className="flex items-center gap-3 p-3 bg-cream-300 rounded-lg"
               >
                 <div
                   className={`h-8 w-8 rounded-full flex items-center justify-center text-sm font-semibold ${
-                    player.is_user ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-600'
+                    player.is_user ? 'bg-secondary/20 text-secondary-700' : 'bg-cream-400 text-muted'
                   }`}
                 >
                   {player.name.charAt(0).toUpperCase()}
                 </div>
-                <span className="flex-1 font-medium text-golf-text">{player.name}</span>
+                <span className="flex-1 font-medium text-charcoal">{player.name}</span>
                 <input
                   type="number"
                   value={player.playing_handicap}
@@ -823,7 +823,7 @@ function PlayerSelectionStep({
                   step="0.1"
                   min="-10"
                   max="54"
-                  className="w-20 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-20 px-3 py-1.5 text-sm border border-card-border rounded-lg focus:ring-2 focus:ring-secondary/20 focus:border-secondary bg-card"
                 />
               </div>
             ))}
@@ -845,29 +845,29 @@ function RoundDetailsStep({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-semibold text-golf-text mb-2">Round Details</h2>
-        <p className="text-gray-500 text-sm">Add any additional details for your round</p>
+        <h2 className="text-lg font-semibold text-charcoal mb-2">Round Details</h2>
+        <p className="text-muted text-sm">Add any additional details for your round</p>
       </div>
 
       {/* Summary */}
-      <div className="bg-gray-50 rounded-lg p-4 space-y-2">
+      <div className="bg-cream-300 rounded-lg p-4 space-y-2">
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Course</span>
-          <span className="font-medium text-golf-text">{data.course?.name}</span>
+          <span className="text-muted">Course</span>
+          <span className="font-medium text-charcoal">{data.course?.name}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Tees</span>
-          <span className="font-medium text-golf-text">{data.teeSet?.name}</span>
+          <span className="text-muted">Tees</span>
+          <span className="font-medium text-charcoal">{data.teeSet?.name}</span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Nines</span>
-          <span className="font-medium text-golf-text">
+          <span className="text-muted">Nines</span>
+          <span className="font-medium text-charcoal">
             {data.nines.map((n) => n.name).join(' + ')}
           </span>
         </div>
         <div className="flex justify-between text-sm">
-          <span className="text-gray-500">Players</span>
-          <span className="font-medium text-golf-text">
+          <span className="text-muted">Players</span>
+          <span className="font-medium text-charcoal">
             {data.players.map((p) => p.name).join(', ')}
           </span>
         </div>
@@ -875,21 +875,21 @@ function RoundDetailsStep({
 
       {/* Date */}
       <div>
-        <label htmlFor="date-played" className="block text-sm font-medium text-gray-700 mb-1">
-          Date <span className="text-red-500">*</span>
+        <label htmlFor="date-played" className="label">
+          Date <span className="text-status-error-text">*</span>
         </label>
         <input
           type="date"
           id="date-played"
           value={data.datePlayed}
           onChange={(e) => onChange({ datePlayed: e.target.value })}
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          className="input"
         />
       </div>
 
       {/* Round Type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Round Type</label>
+        <label className="label">Round Type</label>
         <div className="flex gap-3">
           {(['casual', 'tournament', 'practice'] as const).map((type) => (
             <button
@@ -897,8 +897,8 @@ function RoundDetailsStep({
               onClick={() => onChange({ roundType: type })}
               className={`flex-1 py-2 px-3 rounded-lg border text-sm font-medium capitalize transition-colors ${
                 data.roundType === type
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  ? 'border-secondary bg-secondary/10 text-secondary-700'
+                  : 'border-card-border text-muted hover:border-secondary/50'
               }`}
             >
               {type}
@@ -909,8 +909,8 @@ function RoundDetailsStep({
 
       {/* Weather */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Weather <span className="text-gray-400">(optional)</span>
+        <label className="label">
+          Weather <span className="text-muted">(optional)</span>
         </label>
         <div className="flex gap-2 flex-wrap">
           {['Sunny', 'Cloudy', 'Rainy', 'Windy'].map((weather) => (
@@ -919,8 +919,8 @@ function RoundDetailsStep({
               onClick={() => onChange({ weather: data.weather === weather ? '' : weather })}
               className={`py-1.5 px-3 rounded-full border text-sm transition-colors ${
                 data.weather === weather
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  ? 'border-secondary bg-secondary/10 text-secondary-700'
+                  : 'border-card-border text-muted hover:border-secondary/50'
               }`}
             >
               {weather}
@@ -931,8 +931,8 @@ function RoundDetailsStep({
 
       {/* Temperature */}
       <div>
-        <label htmlFor="temperature" className="block text-sm font-medium text-gray-700 mb-1">
-          Temperature <span className="text-gray-400">(optional)</span>
+        <label htmlFor="temperature" className="label">
+          Temperature <span className="text-muted">(optional)</span>
         </label>
         <div className="relative w-32">
           <input
@@ -941,9 +941,9 @@ function RoundDetailsStep({
             value={data.temperature}
             onChange={(e) => onChange({ temperature: e.target.value })}
             placeholder="72"
-            className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary pr-8"
+            className="input pr-8"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted text-sm">
             F
           </span>
         </div>
@@ -951,8 +951,8 @@ function RoundDetailsStep({
 
       {/* Notes */}
       <div>
-        <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-          Notes <span className="text-gray-400">(optional)</span>
+        <label htmlFor="notes" className="label">
+          Notes <span className="text-muted">(optional)</span>
         </label>
         <textarea
           id="notes"
@@ -960,7 +960,7 @@ function RoundDetailsStep({
           onChange={(e) => onChange({ notes: e.target.value })}
           rows={3}
           placeholder="Any notes about this round..."
-          className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary resize-none"
+          className="input resize-none"
         />
       </div>
     </div>

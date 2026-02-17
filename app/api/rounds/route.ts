@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth-helpers';
 import { Prisma } from '@prisma/client';
 
 interface RoundPlayerInput {
@@ -23,14 +22,8 @@ interface CreateRoundInput {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error } = await requireAuth();
+    if (error) return error;
 
     const body: CreateRoundInput = await request.json();
 
@@ -98,6 +91,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify nines exist and belong to course, and get their holes
+    // IMPORTANT: Filter holes by the selected tee_set_id to avoid getting holes from ALL tee sets
     const nines = await prisma.nine.findMany({
       where: {
         id: { in: body.nine_ids },
@@ -105,6 +99,9 @@ export async function POST(request: NextRequest) {
       },
       include: {
         holes: {
+          where: {
+            tee_set_id: body.tee_set_id,
+          },
           orderBy: { hole_number: 'asc' },
         },
       },
@@ -249,14 +246,8 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    const { session, error } = await requireAuth();
+    if (error) return error;
 
     const searchParams = request.nextUrl.searchParams;
     const status = searchParams.get('status');
@@ -347,9 +338,18 @@ export async function GET(request: NextRequest) {
             color: true,
             course_rating: true,
             slope_rating: true,
-            holes: {
-              select: {
-                par: true,
+          },
+        },
+        round_nines: {
+          orderBy: { play_order: 'asc' },
+          include: {
+            nine: {
+              include: {
+                holes: {
+                  select: {
+                    par: true,
+                  },
+                },
               },
             },
           },
@@ -372,7 +372,8 @@ export async function GET(request: NextRequest) {
 
     // Transform to include computed fields
     const data = rounds.map((round) => {
-      const totalPar = round.tee_set.holes.reduce((sum, h) => sum + h.par, 0);
+      const allHoles = round.round_nines.flatMap((rn) => rn.nine.holes);
+      const totalPar = allHoles.reduce((sum, h) => sum + h.par, 0);
       const userScore = round.round_players.find(rp => rp.player_id === userPlayer.id)?.gross_score;
 
       return {

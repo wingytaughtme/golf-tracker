@@ -93,17 +93,20 @@ export async function POST(
       );
     }
 
-    // Extract holes from round_nines in play order
-    const allHoles = round.round_nines.flatMap((rn) => rn.nine.holes);
+    // Extract holes from round_nines in play order, filtered to the round's tee set
+    const roundTeeSetId = round.tee_set.id;
+    const allHoles = round.round_nines.flatMap((rn) =>
+      rn.nine.holes.filter((h) => h.tee_set_id === roundTeeSetId)
+    );
     const allHoleIds = new Set(allHoles.map((h) => h.id));
 
     // Validate scores are entered for the selected holes
     const totalHoles = allHoles.length;
     const requiredHoles = isNineHole ? 9 : totalHoles;
 
-    // Get holes by nine position (first nine vs second nine)
-    const firstNineHoles = round.round_nines[0]?.nine.holes || [];
-    const secondNineHoles = round.round_nines[1]?.nine.holes || [];
+    // Get holes by nine position (first nine vs second nine), filtered to the round's tee set
+    const firstNineHoles = (round.round_nines[0]?.nine.holes || []).filter((h) => h.tee_set_id === roundTeeSetId);
+    const secondNineHoles = (round.round_nines[1]?.nine.holes || []).filter((h) => h.tee_set_id === roundTeeSetId);
     const firstNineHoleIds = new Set(firstNineHoles.map((h) => h.id));
     const secondNineHoleIds = new Set(secondNineHoles.map((h) => h.id));
 

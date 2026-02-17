@@ -601,7 +601,7 @@ export default function RoundDetailPage() {
                     <div>
                       <p className="text-muted">Thru</p>
                       <p className="font-semibold text-charcoal">
-                        {rp.stats.holes_completed === 18 ? 'F' : rp.stats.holes_completed}
+                        {rp.stats.holes_completed === totalHoles ? 'F' : rp.stats.holes_completed}
                       </p>
                     </div>
                     <div>

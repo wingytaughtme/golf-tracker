@@ -43,6 +43,9 @@ export async function GET() {
             slope_rating: true,
           },
         },
+        round_nines: {
+          select: { id: true },
+        },
         round_players: {
           include: {
             player: {
@@ -69,7 +72,7 @@ export async function GET() {
     // Transform to include progress info
     const data = activeRounds.map((round) => {
       // Calculate holes completed (by checking if any player has entered strokes)
-      const totalHoles = 18; // Assuming 18 holes
+      const totalHoles = round.round_nines.length * 9;
       const userRoundPlayer = round.round_players.find(
         (rp) => rp.player_id === userPlayer.id
       );

@@ -239,9 +239,15 @@ export default function ScorecardControls({
         {/* Progress indicator */}
         {!allHolesComplete && (
           <div className="mt-2 text-xs text-muted text-center">
-            <span>Front 9: {front9Completed}/9</span>
-            <span className="mx-2">•</span>
-            <span>Back 9: {back9Completed}/9</span>
+            {totalHoles > 9 ? (
+              <>
+                <span>Front 9: {front9Completed}/9</span>
+                <span className="mx-2">•</span>
+                <span>Back 9: {back9Completed}/9</span>
+              </>
+            ) : (
+              <span>{holesCompleted}/{totalHoles} holes</span>
+            )}
             {canComplete && !allHolesComplete && (
               <span className="ml-2 text-score-birdie font-medium">
                 ({front9Complete ? 'Front' : 'Back'} 9 ready!)
@@ -352,7 +358,7 @@ export default function ScorecardControls({
                     Completing...
                   </>
                 ) : (
-                  selectedNine === 'full' ? 'Complete 18 Holes' : `Complete ${selectedNine === 'front' ? 'Front' : 'Back'} 9`
+                  selectedNine === 'full' ? `Complete ${totalHoles} Holes` : `Complete ${selectedNine === 'front' ? 'Front' : 'Back'} 9`
                 )}
               </button>
             </div>

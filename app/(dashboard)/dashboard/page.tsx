@@ -16,6 +16,7 @@ interface ActiveRound {
     name: string;
     color: string;
   };
+  round_nines: { id: string }[];
   round_players: {
     player: {
       name: string;
@@ -74,6 +75,9 @@ async function getActiveRounds(userId: string): Promise<ActiveRound[]> {
       },
       tee_set: {
         select: { name: true, color: true },
+      },
+      round_nines: {
+        select: { id: true },
       },
       round_players: {
         include: {
@@ -234,7 +238,7 @@ export default async function DashboardPage() {
                     <div>
                       <p className="font-medium text-charcoal">{round.course.name}</p>
                       <p className="text-sm text-muted">
-                        {round.tee_set.name} tees - {getHolesCompleted(round.round_players)}/18 holes
+                        {round.tee_set.name} tees - {getHolesCompleted(round.round_players)}/{round.round_nines.length * 9} holes
                       </p>
                     </div>
                     <Link

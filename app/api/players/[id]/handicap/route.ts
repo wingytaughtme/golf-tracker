@@ -36,7 +36,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { session, error: authError } = await requireAuth();
+    const { error: authError } = await requireAuth();
     if (authError) return authError;
 
     const { id: playerId } = await params;
@@ -296,7 +296,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { session, error: authError } = await requireAuth();
+    const { error: authError } = await requireAuth();
     if (authError) return authError;
 
     const { id: playerId } = await params;

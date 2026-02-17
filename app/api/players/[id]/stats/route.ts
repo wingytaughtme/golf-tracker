@@ -27,7 +27,7 @@ interface RouteParams {
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
-    const { session, error } = await requireAuth();
+    const { error } = await requireAuth();
     if (error) return error;
 
     const { id } = await params;

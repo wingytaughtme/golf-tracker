@@ -36,7 +36,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { error: authError } = await requireAuth();
+    const { session, error: authError } = await requireAuth();
     if (authError) return authError;
 
     const { id: playerId } = await params;

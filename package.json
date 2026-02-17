@@ -10,7 +10,8 @@
     "db:seed": "npx prisma db seed",
     "db:seed:prod": "SEED_PERSONAL_ONLY=true SEED_SKIP_DEMO=true npx prisma db seed",
     "db:reset": "npx prisma migrate reset",
-    "db:push": "npx prisma db push"
+    "db:push": "npx prisma db push",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.19.1",

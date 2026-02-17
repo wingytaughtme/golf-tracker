@@ -47,6 +47,45 @@ async function seedCourse(courseData: CourseData): Promise<{ id: string; name: s
     });
   }
 
+  // Seed nines
+  let ninesConfig: { name: string; nine_type: 'front' | 'back' | 'named'; display_order: number }[];
+
+  if (courseData.nines) {
+    ninesConfig = courseData.nines;
+  } else if (courseData.num_holes >= 18) {
+    ninesConfig = [
+      { name: 'Front', nine_type: 'front', display_order: 0 },
+      { name: 'Back', nine_type: 'back', display_order: 1 },
+    ];
+  } else {
+    ninesConfig = [
+      { name: 'Front', nine_type: 'front', display_order: 0 },
+    ];
+  }
+
+  const nineRecords: { id: string; name: string; display_order: number }[] = [];
+  for (const nineCfg of ninesConfig) {
+    const nine = await prisma.nine.upsert({
+      where: {
+        course_id_name: {
+          course_id: course.id,
+          name: nineCfg.name,
+        },
+      },
+      create: {
+        course_id: course.id,
+        name: nineCfg.name,
+        nine_type: nineCfg.nine_type,
+        display_order: nineCfg.display_order,
+      },
+      update: {
+        nine_type: nineCfg.nine_type,
+        display_order: nineCfg.display_order,
+      },
+    });
+    nineRecords.push({ id: nine.id, name: nine.name, display_order: nine.display_order });
+  }
+
   // Seed tee sets and holes
   for (const teeSetData of courseData.tee_sets) {
     const existingTee = course.tee_sets.find(
@@ -114,6 +153,20 @@ async function seedCourse(courseData: CourseData): Promise<{ id: string; name: s
           distance: h.distance,
           handicap_index: h.handicap_index,
         })),
+      });
+    }
+
+    // Link holes to nines
+    for (const nine of nineRecords) {
+      const holesPerNine = 9;
+      const startHole = nine.display_order * holesPerNine + 1;
+      const endHole = startHole + holesPerNine - 1;
+      await prisma.hole.updateMany({
+        where: {
+          tee_set_id: teeSetId,
+          hole_number: { gte: startHole, lte: endHole },
+        },
+        data: { nine_id: nine.id },
       });
     }
   }

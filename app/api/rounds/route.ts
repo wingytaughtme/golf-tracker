@@ -348,6 +348,7 @@ export async function GET(request: NextRequest) {
                 holes: {
                   select: {
                     par: true,
+                    tee_set_id: true,
                   },
                 },
               },
@@ -372,7 +373,9 @@ export async function GET(request: NextRequest) {
 
     // Transform to include computed fields
     const data = rounds.map((round) => {
-      const allHoles = round.round_nines.flatMap((rn) => rn.nine.holes);
+      const allHoles = round.round_nines.flatMap((rn) =>
+        rn.nine.holes.filter((h) => h.tee_set_id === round.tee_set.id)
+      );
       const totalPar = allHoles.reduce((sum, h) => sum + h.par, 0);
       const userScore = round.round_players.find(rp => rp.player_id === userPlayer.id)?.gross_score;
 

@@ -322,15 +322,18 @@ export async function PATCH(
       };
     });
 
-    // Extract holes from round_nines with display numbers
+    // Extract holes from round_nines with display numbers, filtered to the round's tee set
+    const roundTeeSetId = updatedRound?.tee_set.id;
     let displayNumber = 0;
     const holes = updatedRound?.round_nines.flatMap((rn, nineIndex) =>
-      rn.nine.holes.map((hole) => ({
-        ...hole,
-        display_number: ++displayNumber,
-        nine_index: nineIndex,
-        nine_name: rn.nine.name,
-      }))
+      rn.nine.holes
+        .filter((hole) => hole.tee_set_id === roundTeeSetId)
+        .map((hole) => ({
+          ...hole,
+          display_number: ++displayNumber,
+          nine_index: nineIndex,
+          nine_name: rn.nine.name,
+        }))
     ) || [];
 
     return NextResponse.json({

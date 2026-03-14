@@ -56,6 +56,7 @@ interface RoundSummary {
     };
     totalPar: number;
     datePlayed: string;
+    isNineHole: boolean;
   };
   players: PlayerResult[];
 }
@@ -86,6 +87,7 @@ export default function RoundSummaryPage() {
         // Build summary from round data
         const holes = roundData.holes || [];
         const totalPar = holes.reduce((sum: number, h: { par: number }) => sum + h.par, 0);
+        const isNineHole = (roundData.round_nines?.length ?? 0) === 1;
 
         // Create a map of hole_id to nine_index for score lookups
         const holeNineMap = new Map<string, number>();
@@ -141,7 +143,15 @@ export default function RoundSummaryPage() {
           // Handicap differential
           const courseRating = Number(roundData.tee_set.course_rating);
           const slopeRating = roundData.tee_set.slope_rating;
-          const handicapDifferential = Math.round(((grossScore - courseRating) * 113 / slopeRating) * 10) / 10;
+          let handicapDifferential: number;
+          if (isNineHole) {
+            // 9-hole: use half course rating, then double the differential
+            const nineHoleCourseRating = courseRating / 2;
+            const nineHoleDiff = (113 / slopeRating) * (grossScore - nineHoleCourseRating);
+            handicapDifferential = Math.round(nineHoleDiff * 2 * 10) / 10;
+          } else {
+            handicapDifferential = Math.round(((grossScore - courseRating) * 113 / slopeRating) * 10) / 10;
+          }
 
           return {
             playerId: rp.player_id || rp.player.id,
@@ -185,6 +195,7 @@ export default function RoundSummaryPage() {
             },
             totalPar,
             datePlayed: roundData.date_played,
+            isNineHole,
           },
           players,
         });
@@ -339,14 +350,16 @@ export default function RoundSummaryPage() {
                   </p>
                 </div>
 
-                {/* Back 9 */}
-                <div className="bg-cream-300 rounded-lg p-3">
-                  <p className="text-xs text-muted uppercase">Back 9</p>
-                  <p className="text-xl font-bold text-charcoal">{player.backNine.score}</p>
-                  <p className={`text-sm ${getScoreColor(player.backNine.toPar)}`}>
-                    {formatScoreToPar(player.backNine.toPar)}
-                  </p>
-                </div>
+                {/* Back 9 - hidden for 9-hole rounds */}
+                {!summary.round.isNineHole && (
+                  <div className="bg-cream-300 rounded-lg p-3">
+                    <p className="text-xs text-muted uppercase">Back 9</p>
+                    <p className="text-xl font-bold text-charcoal">{player.backNine.score}</p>
+                    <p className={`text-sm ${getScoreColor(player.backNine.toPar)}`}>
+                      {formatScoreToPar(player.backNine.toPar)}
+                    </p>
+                  </div>
+                )}
 
                 {/* Net Score */}
                 {player.netScore !== null && (
@@ -476,3 +489,4 @@ export default function RoundSummaryPage() {
     </div>
   );
 }
+

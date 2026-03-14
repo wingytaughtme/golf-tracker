@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth-helpers';
 import {
@@ -28,7 +29,7 @@ export async function POST(
       // No body or invalid JSON, assume full round
     }
 
-    const isNineHole = nineHoleMode === 'front' || nineHoleMode === 'back';
+    // NOTE: isNineHole is determined after fetching the round, see below
 
     // Fetch the round with all related data
     const round = await prisma.round.findUnique({
@@ -100,6 +101,18 @@ export async function POST(
     );
     const allHoleIds = new Set(allHoles.map((h) => h.id));
 
+    // Server-authoritative 9-hole detection:
+    // If the round was set up with only 1 nine, it's a 9-hole round regardless
+    // of what the client sends as nineHoleMode
+    const isNineHole = round.round_nines.length === 1 ||
+      nineHoleMode === 'front' || nineHoleMode === 'back';
+
+    // If round has only 1 nine, determine which type it is for the notes
+    if (round.round_nines.length === 1 && !nineHoleMode) {
+      const nineType = round.round_nines[0].nine.holes[0]?.hole_number <= 9 ? 'front' : 'back';
+      nineHoleMode = nineType as 'front' | 'back';
+    }
+
     // Validate scores are entered for the selected holes
     const totalHoles = allHoles.length;
     const requiredHoles = isNineHole ? 9 : totalHoles;
@@ -113,6 +126,9 @@ export async function POST(
     // Determine which holes to validate based on mode
     const getRelevantHoles = (holeId: string) => {
       if (!isNineHole) return allHoleIds.has(holeId);
+      // For single-nine rounds, all holes in the round are relevant
+      // (the only nine is always round_nines[0] regardless of front/back type)
+      if (round.round_nines.length === 1) return allHoleIds.has(holeId);
       if (nineHoleMode === 'front') return firstNineHoleIds.has(holeId);
       return secondNineHoleIds.has(holeId);
     };
@@ -374,6 +390,11 @@ export async function POST(
         tee_set: true,
       },
     });
+
+    // Revalidate cached pages so dashboard/rounds show updated data
+    revalidatePath('/dashboard');
+    revalidatePath('/rounds');
+    revalidatePath('/players');
 
     return NextResponse.json({
       success: true,

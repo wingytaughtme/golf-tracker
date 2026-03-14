@@ -1,9 +1,13 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import RoundSetupWizard from '@/components/rounds/round-setup-wizard';
 import Link from 'next/link';
 
 export default function NewRoundPage() {
+  const searchParams = useSearchParams();
+  const preselectedCourseId = searchParams.get('course') || undefined;
+  const preselectedTeeId = searchParams.get('tee') || undefined;
   return (
     <div className="max-w-2xl mx-auto">
       {/* Header */}
@@ -22,7 +26,10 @@ export default function NewRoundPage() {
       </div>
 
       {/* Wizard */}
-      <RoundSetupWizard />
+      <RoundSetupWizard
+        preselectedCourseId={preselectedCourseId}
+        preselectedTeeId={preselectedTeeId}
+      />
     </div>
   );
 }

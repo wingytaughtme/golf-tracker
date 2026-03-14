@@ -60,11 +60,17 @@ const STEPS = [
   { id: 5, name: 'Details', description: 'Round details' },
 ];
 
-export default function RoundSetupWizard() {
+interface RoundSetupWizardProps {
+  preselectedCourseId?: string;
+  preselectedTeeId?: string;
+}
+
+export default function RoundSetupWizard({ preselectedCourseId, preselectedTeeId }: RoundSetupWizardProps) {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasAutoAdvanced, setHasAutoAdvanced] = useState(false);
 
   const [wizardData, setWizardData] = useState<WizardData>({
     course: null,
@@ -78,6 +84,48 @@ export default function RoundSetupWizard() {
     temperature: '',
     notes: '',
   });
+
+  // Auto-advance if course/tee are preselected via URL params
+  useEffect(() => {
+    if (!preselectedCourseId || hasAutoAdvanced) return;
+
+    async function autoSelect() {
+      try {
+        const response = await fetch(`/api/courses/${preselectedCourseId}`);
+        if (!response.ok) return;
+        const data = await response.json();
+
+        const course: Course = {
+          id: data.id,
+          name: data.name,
+          city: data.city,
+          state: data.state,
+          num_holes: data.num_holes,
+          course_type: data.course_type,
+          tee_set_count: data.tee_sets?.length || 0,
+        };
+
+        // Find preselected tee if provided
+        const teeSets = data.tee_sets || [];
+        const teeSet = preselectedTeeId
+          ? teeSets.find((t: TeeSet) => t.id === preselectedTeeId) || null
+          : null;
+
+        if (teeSet) {
+          setWizardData(prev => ({ ...prev, course, teeSet, nineIds: [], nines: [] }));
+          setCurrentStep(3); // Skip to nine selection
+        } else {
+          setWizardData(prev => ({ ...prev, course, teeSet: null }));
+          setCurrentStep(2); // Skip to tee selection
+        }
+        setHasAutoAdvanced(true);
+      } catch {
+        // If fetch fails, just stay on step 1
+      }
+    }
+
+    autoSelect();
+  }, [preselectedCourseId, preselectedTeeId, hasAutoAdvanced]);
 
   const canProceed = useCallback(() => {
     switch (currentStep) {

@@ -51,11 +51,10 @@ export default function NineSelector({
         if (courseNines.length === 1) {
           // 9-hole course: auto-select the only nine
           onChange([courseNines[0].id], [courseNines[0]]);
-        } else if (courseNines.length === 2 && selectedNineIds.length === 0) {
-          // 18-hole course: default to both nines in order
-          const sorted = [...courseNines].sort((a, b) => a.display_order - b.display_order);
-          onChange(sorted.map(n => n.id), sorted);
         }
+        // For 2+ nines: don't auto-select — let user explicitly choose
+        // This prevents the confusing toggle behavior where clicking "Front 9"
+        // would deselect it (since both were pre-selected)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load nines');
       } finally {
@@ -74,8 +73,8 @@ export default function NineSelector({
     let newIds: string[];
 
     if (isSelected) {
-      // Don't allow deselecting if at minimum
-      if (selectedNineIds.length <= minNines) return;
+      // Don't allow deselecting below minimum (but allow 0 during initial selection)
+      if (selectedNineIds.length <= minNines && selectedNineIds.length > 0) return;
       newIds = selectedNineIds.filter(id => id !== nine.id);
     } else {
       // Don't allow selecting more than max

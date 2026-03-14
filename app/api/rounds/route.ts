@@ -8,6 +8,11 @@ interface RoundPlayerInput {
   playing_handicap?: number | null;
 }
 
+interface SideGameInput {
+  game_type: 'skins' | 'nassau' | 'match_play';
+  config: { bet_amount: number; gross_net: string; [key: string]: unknown };
+}
+
 interface CreateRoundInput {
   course_id: string;
   tee_set_id: string;
@@ -18,6 +23,7 @@ interface CreateRoundInput {
   temperature?: number | null;
   notes?: string | null;
   players: RoundPlayerInput[];
+  side_games?: SideGameInput[];
 }
 
 export async function POST(request: NextRequest) {
@@ -187,6 +193,40 @@ export async function POST(request: NextRequest) {
 
       return newRound;
     });
+
+    // Create side games if provided
+    if (body.side_games?.length) {
+      for (const game of body.side_games) {
+        await prisma.sideGame.create({
+          data: {
+            round_id: round.id,
+            game_type: game.game_type,
+            config: JSON.parse(JSON.stringify(game.config)),
+          },
+        });
+      }
+    }
+
+    // Save last round config (fire-and-forget)
+    prisma.user.update({
+      where: { id: session.user.id },
+      data: {
+        preferences: {
+          last_round_config: {
+            course_id: body.course_id,
+            course_name: course.name,
+            tee_set_id: body.tee_set_id,
+            tee_set_name: teeSet.name,
+            nine_ids: body.nine_ids,
+            nine_names: orderedNines.map(n => n.name),
+            round_type: body.round_type || 'casual',
+            player_ids: body.players.map(p => p.player_id),
+            player_names: players.map(p => p.name),
+            saved_at: new Date().toISOString(),
+          }
+        }
+      }
+    }).catch(() => {});
 
     // Fetch the created round with relations
     const createdRound = await prisma.round.findUnique({

@@ -126,6 +126,48 @@ async function getRecentRounds(userId: string): Promise<RecentRound[]> {
   });
 }
 
+interface QuickStartConfig {
+  course_id: string;
+  course_name: string;
+  tee_set_id: string;
+  tee_set_name: string;
+  nine_ids: string[];
+  nine_names: string[];
+  round_type: string;
+  player_ids: string[];
+  player_names: string[];
+  saved_at: string;
+}
+
+async function getQuickStartConfig(userId: string): Promise<QuickStartConfig | null> {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { preferences: true },
+  });
+
+  const prefs = user?.preferences as { last_round_config?: QuickStartConfig } | null;
+  const config = prefs?.last_round_config;
+  if (!config) return null;
+
+  // Validate course and tee set still exist
+  const [course, teeSet, players] = await Promise.all([
+    prisma.course.findUnique({ where: { id: config.course_id }, select: { id: true } }),
+    prisma.teeSet.findFirst({ where: { id: config.tee_set_id, course_id: config.course_id }, select: { id: true } }),
+    prisma.player.findMany({ where: { id: { in: config.player_ids } }, select: { id: true, name: true } }),
+  ]);
+
+  if (!course || !teeSet || players.length === 0) return null;
+
+  // Update player names in case they changed
+  return {
+    ...config,
+    player_names: config.player_ids.map(id => {
+      const p = players.find(pl => pl.id === id);
+      return p?.name || 'Unknown';
+    }).filter(n => n !== 'Unknown'),
+  };
+}
+
 async function getPlayerStats(userId: string): Promise<PlayerStats> {
   const userPlayer = await prisma.player.findFirst({
     where: { user_id: userId },
@@ -189,10 +231,11 @@ export default async function DashboardPage() {
   const userName = session?.user?.name || session?.user?.email?.split('@')[0] || 'Golfer';
   const userId = session?.user?.id;
 
-  const [activeRounds, recentRounds, stats] = await Promise.all([
+  const [activeRounds, recentRounds, stats, quickStartConfig] = await Promise.all([
     userId ? getActiveRounds(userId) : Promise.resolve([]),
     userId ? getRecentRounds(userId) : Promise.resolve([]),
     userId ? getPlayerStats(userId) : Promise.resolve({ handicap: null, roundsThisYear: 0, bestScore: null, averageScore: null }),
+    userId ? getQuickStartConfig(userId) : Promise.resolve(null),
   ]);
 
   const formatDate = (date: Date) => {
@@ -317,6 +360,48 @@ export default async function DashboardPage() {
           </div>
         </Link>
       </div>
+
+      {/* Quick Start */}
+      {quickStartConfig && (
+        <div className="card p-6">
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="font-semibold text-charcoal flex items-center gap-2">
+                <svg className="h-5 w-5 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                Quick Start
+              </h3>
+              <p className="text-sm text-muted mt-1">
+                {quickStartConfig.course_name} - {quickStartConfig.tee_set_name} tees
+              </p>
+              <p className="text-sm text-muted">
+                {quickStartConfig.player_names.join(', ')} - {quickStartConfig.round_type}
+              </p>
+              {(() => {
+                const daysSince = Math.floor((Date.now() - new Date(quickStartConfig.saved_at).getTime()) / 86400000);
+                return daysSince > 30 ? (
+                  <p className="text-xs text-score-bogey mt-1">Last used {daysSince} days ago</p>
+                ) : null;
+              })()}
+            </div>
+            <div className="flex gap-2">
+              <Link
+                href="/rounds/new?quickstart=true&edit=true"
+                className="btn-outline text-sm px-3 py-1.5"
+              >
+                Edit
+              </Link>
+              <Link
+                href="/rounds/new?quickstart=true"
+                className="btn-primary text-sm px-3 py-1.5"
+              >
+                Start Round
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

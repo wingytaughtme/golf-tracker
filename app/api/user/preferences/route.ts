@@ -11,6 +11,7 @@ export async function GET() {
       where: { id: session.user.id },
       select: {
         track_detailed_stats: true,
+        preferences: true,
       },
     });
 
@@ -20,6 +21,7 @@ export async function GET() {
 
     return NextResponse.json({
       track_detailed_stats: user.track_detailed_stats,
+      preferences: user.preferences,
     });
   } catch (error) {
     console.error('Error fetching preferences:', error);
@@ -36,20 +38,36 @@ export async function PUT(request: Request) {
     if (error) return error;
 
     const body = await request.json();
-    const { track_detailed_stats } = body;
+    const { track_detailed_stats, preferences } = body;
+
+    const updateData: { track_detailed_stats?: boolean; preferences?: object } = {};
+
+    if (track_detailed_stats !== undefined) {
+      updateData.track_detailed_stats = track_detailed_stats ?? false;
+    }
+
+    if (preferences !== undefined) {
+      // Merge with existing preferences
+      const existingUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { preferences: true },
+      });
+      const existingPrefs = (existingUser?.preferences as Record<string, unknown>) || {};
+      updateData.preferences = { ...existingPrefs, ...preferences };
+    }
 
     const user = await prisma.user.update({
       where: { id: session.user.id },
-      data: {
-        track_detailed_stats: track_detailed_stats ?? false,
-      },
+      data: updateData,
       select: {
         track_detailed_stats: true,
+        preferences: true,
       },
     });
 
     return NextResponse.json({
       track_detailed_stats: user.track_detailed_stats,
+      preferences: user.preferences,
     });
   } catch (error) {
     console.error('Error updating preferences:', error);

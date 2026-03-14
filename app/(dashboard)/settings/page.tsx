@@ -169,6 +169,26 @@ export default function SettingsPage() {
         </div>
       </div>
 
+      {/* Club Bag */}
+      <a href="/settings/club-bag" className="block bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 bg-secondary/20 rounded-lg flex items-center justify-center">
+              <svg className="h-5 w-5 text-secondary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-golf-text">Club Bag</h2>
+              <p className="text-sm text-gray-500">Manage your clubs and track distances</p>
+            </div>
+          </div>
+          <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </a>
+
       {/* Info Section */}
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
         <div className="flex">

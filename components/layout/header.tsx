@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Rounds', href: '/rounds' },
   { name: 'Courses', href: '/courses' },
   { name: 'Players', href: '/players' },
+  { name: 'Leagues', href: '/leagues' },
 ];
 
 export default function Header() {

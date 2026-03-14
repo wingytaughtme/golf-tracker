@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import ScorecardHeader from './scorecard-header';
 import ScorecardGrid from './scorecard-grid';
+import SideGamePanel from './side-game-panel';
 import { useScorecardStore } from '@/stores/scorecard-store';
 import { useAutoSave } from '@/lib/hooks/use-auto-save';
 
@@ -316,6 +317,9 @@ export default function Scorecard({
         gridMode={gridMode}
         showDetailedStats={showDetailedStats}
       />
+
+      {/* Side Games Panel */}
+      <SideGamePanel roundId={roundId} />
 
     </div>
   );

@@ -24,7 +24,7 @@ export default async function AuthLayout({
         </main>
 
         {/* Simple footer */}
-        <footer className="absolute bottom-4 left-0 right-0 text-center text-sm text-white/60">
+        <footer className="absolute bottom-4 left-0 right-0 text-center text-sm text-white/60 pointer-events-none">
           &copy; {new Date().getFullYear()} Birdie Book. All rights reserved.
         </footer>
       </div>

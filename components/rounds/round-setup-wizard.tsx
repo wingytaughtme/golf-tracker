@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import PlayerSelector from '@/components/players/player-selector';
 import NineSelector, { Nine } from '@/components/courses/nine-selector';
+import SideGameSetup, { type SideGameConfig } from '@/components/rounds/side-game-setup';
 
 interface Course {
   id: string;
@@ -45,6 +46,7 @@ interface WizardData {
   nineIds: string[];
   nines: Nine[];
   players: PlayerWithHandicap[];
+  sideGames: SideGameConfig[];
   datePlayed: string;
   roundType: 'casual' | 'tournament' | 'practice';
   weather: string;
@@ -57,27 +59,31 @@ const STEPS = [
   { id: 2, name: 'Tees', description: 'Choose tee set' },
   { id: 3, name: 'Nines', description: 'Select nines' },
   { id: 4, name: 'Players', description: 'Add players' },
-  { id: 5, name: 'Details', description: 'Round details' },
+  { id: 5, name: 'Side Games', description: 'Add side games' },
+  { id: 6, name: 'Details', description: 'Round details' },
 ];
 
 interface RoundSetupWizardProps {
   preselectedCourseId?: string;
   preselectedTeeId?: string;
+  initialConfig?: WizardData;
+  startAtConfirmation?: boolean;
 }
 
-export default function RoundSetupWizard({ preselectedCourseId, preselectedTeeId }: RoundSetupWizardProps) {
+export default function RoundSetupWizard({ preselectedCourseId, preselectedTeeId, initialConfig, startAtConfirmation }: RoundSetupWizardProps) {
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(initialConfig && startAtConfirmation ? 6 : 1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasAutoAdvanced, setHasAutoAdvanced] = useState(false);
+  const [hasAutoAdvanced, setHasAutoAdvanced] = useState(!!initialConfig);
 
-  const [wizardData, setWizardData] = useState<WizardData>({
+  const [wizardData, setWizardData] = useState<WizardData>(initialConfig || {
     course: null,
     teeSet: null,
     nineIds: [],
     nines: [],
     players: [],
+    sideGames: [],
     datePlayed: new Date().toISOString().split('T')[0],
     roundType: 'casual',
     weather: '',
@@ -138,6 +144,8 @@ export default function RoundSetupWizard({ preselectedCourseId, preselectedTeeId
       case 4:
         return wizardData.players.length > 0;
       case 5:
+        return true; // Side games are optional
+      case 6:
         return wizardData.datePlayed !== '';
       default:
         return false;
@@ -145,7 +153,7 @@ export default function RoundSetupWizard({ preselectedCourseId, preselectedTeeId
   }, [currentStep, wizardData]);
 
   const handleNext = () => {
-    if (canProceed() && currentStep < 5) {
+    if (canProceed() && currentStep < 6) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -182,6 +190,7 @@ export default function RoundSetupWizard({ preselectedCourseId, preselectedTeeId
             player_id: p.player_id,
             playing_handicap: p.playing_handicap ? parseFloat(p.playing_handicap) : null,
           })),
+          side_games: wizardData.sideGames.length > 0 ? wizardData.sideGames : undefined,
         }),
       });
 
@@ -245,6 +254,14 @@ export default function RoundSetupWizard({ preselectedCourseId, preselectedTeeId
         )}
 
         {currentStep === 5 && (
+          <SideGameSetup
+            players={wizardData.players.map(p => ({ player_id: p.player_id, name: p.name }))}
+            games={wizardData.sideGames}
+            onChange={(sideGames) => setWizardData({ ...wizardData, sideGames })}
+          />
+        )}
+
+        {currentStep === 6 && (
           <RoundDetailsStep
             data={wizardData}
             onChange={(updates) => setWizardData({ ...wizardData, ...updates })}
@@ -269,7 +286,7 @@ export default function RoundSetupWizard({ preselectedCourseId, preselectedTeeId
           Back
         </button>
 
-        {currentStep < 5 ? (
+        {currentStep < 6 ? (
           <button
             onClick={handleNext}
             disabled={!canProceed()}

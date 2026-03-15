@@ -33,6 +33,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
                 tee_set: {
                   select: { name: true, color: true },
                 },
+                round_nines: {
+                  select: { id: true },
+                },
               },
             },
           },
@@ -54,14 +57,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    // Calculate basic stats
+    // Calculate basic stats — normalize 9-hole scores to 18-hole equivalent
     const roundsWithScores = player.round_players.filter(rp => rp.gross_score !== null);
-    const avgScore = roundsWithScores.length > 0
-      ? Math.round(roundsWithScores.reduce((sum, rp) => sum + (rp.gross_score || 0), 0) / roundsWithScores.length)
+    const normalizedScores = roundsWithScores.map(rp => {
+      const isNineHole = rp.round.round_nines.length === 1;
+      const raw = rp.gross_score as number;
+      return isNineHole ? raw * 2 : raw;
+    });
+
+    const avgScore = normalizedScores.length > 0
+      ? Math.round(normalizedScores.reduce((sum, s) => sum + s, 0) / normalizedScores.length)
       : null;
 
-    const bestScore = roundsWithScores.length > 0
-      ? Math.min(...roundsWithScores.map(rp => rp.gross_score || Infinity))
+    const bestScore = normalizedScores.length > 0
+      ? Math.min(...normalizedScores)
       : null;
 
     return NextResponse.json({

@@ -201,12 +201,36 @@ async function getPlayerStats(userId: string): Promise<PlayerStats> {
       },
       gross_score: { not: null },
     },
-    select: { gross_score: true },
+    select: {
+      gross_score: true,
+      round: {
+        select: {
+          round_nines: {
+            select: {
+              nine: {
+                select: {
+                  holes: {
+                    select: { par: true },
+                    where: { tee_set_id: undefined as unknown as string },
+                  },
+                },
+              },
+            },
+          },
+          tee_set_id: true,
+        },
+      },
+    },
   });
 
-  const scores = roundsThisYear
-    .map((r) => r.gross_score)
-    .filter((s): s is number => s !== null);
+  // Normalize scores: for 9-hole rounds, project to 18 by doubling the score
+  const normalizedScores = roundsThisYear
+    .filter((r) => r.gross_score !== null)
+    .map((r) => {
+      const isNineHole = r.round.round_nines.length === 1;
+      const raw = r.gross_score as number;
+      return isNineHole ? raw * 2 : raw;
+    });
 
   // Get the calculated handicap from calculation_details, not the DB field
   // The DB field might be 0 for early rounds before 3 differentials were accumulated
@@ -218,10 +242,10 @@ async function getPlayerStats(userId: string): Promise<PlayerStats> {
 
   return {
     handicap,
-    roundsThisYear: scores.length,
-    bestScore: scores.length > 0 ? Math.min(...scores) : null,
-    averageScore: scores.length > 0
-      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+    roundsThisYear: normalizedScores.length,
+    bestScore: normalizedScores.length > 0 ? Math.min(...normalizedScores) : null,
+    averageScore: normalizedScores.length > 0
+      ? Math.round(normalizedScores.reduce((a, b) => a + b, 0) / normalizedScores.length)
       : null,
   };
 }

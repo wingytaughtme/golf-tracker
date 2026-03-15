@@ -204,33 +204,37 @@ export async function getPlayerOverallStats(playerId: string): Promise<PlayerOve
     };
   }
 
-  // Calculate average gross score
-  const grossScores = roundPlayers.map((rp) => rp.gross_score!);
+  // Calculate average gross score — normalize 9-hole rounds to 18-hole equivalent
+  const normalizedScores = roundPlayers.map((rp) => {
+    const isNineHole = rp.round.round_nines.length === 1;
+    return isNineHole ? rp.gross_score! * 2 : rp.gross_score!;
+  });
   const averageGrossScore = Math.round(
-    (grossScores.reduce((a, b) => a + b, 0) / grossScores.length) * 10
+    (normalizedScores.reduce((a, b) => a + b, 0) / normalizedScores.length) * 10
   ) / 10;
 
-  // Find best and worst rounds
+  // Find best and worst rounds — use normalized scores so 9-hole rounds are comparable
   let bestRound: PlayerOverallStats['bestRound'] = null;
   let worstRound: PlayerOverallStats['worstRound'] = null;
   let bestScore = Infinity;
   let worstScore = -Infinity;
 
-  for (const rp of roundPlayers) {
-    const score = rp.gross_score!;
-    if (score < bestScore) {
-      bestScore = score;
+  for (let i = 0; i < roundPlayers.length; i++) {
+    const rp = roundPlayers[i];
+    const normalized = normalizedScores[i];
+    if (normalized < bestScore) {
+      bestScore = normalized;
       bestRound = {
-        grossScore: score,
+        grossScore: normalized,
         courseName: rp.round.course.name,
         datePlayed: rp.round.date_played,
         roundId: rp.round_id,
       };
     }
-    if (score > worstScore) {
-      worstScore = score;
+    if (normalized > worstScore) {
+      worstScore = normalized;
       worstRound = {
-        grossScore: score,
+        grossScore: normalized,
         courseName: rp.round.course.name,
         datePlayed: rp.round.date_played,
         roundId: rp.round_id,

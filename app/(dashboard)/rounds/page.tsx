@@ -22,6 +22,7 @@ interface Round {
     color: string;
   };
   total_par: number;
+  is_nine_hole?: boolean;
   round_players: {
     id: string;
     player: {
@@ -488,18 +489,23 @@ export default function RoundsPage() {
                         </td>
                         <td className="py-4 px-4 text-right">
                           {round.user_score ? (
-                            <div>
-                              <span className="text-sm font-semibold text-charcoal">{round.user_score}</span>
-                              <span className="text-sm text-muted"> / {round.total_par}</span>
-                              {round.score_vs_par != null && (
-                                <span className={`ml-2 text-sm font-medium ${
-                                  round.score_vs_par < 0 ? 'text-score-birdie' :
-                                  round.score_vs_par === 0 ? 'text-muted' :
-                                  'text-score-bogey'
-                                }`}>
-                                  ({round.score_vs_par > 0 ? '+' : ''}{round.score_vs_par})
-                                </span>
+                            <div className="flex items-center justify-end gap-1.5">
+                              {round.is_nine_hole && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-medium bg-secondary/15 text-secondary-700 rounded">9H</span>
                               )}
+                              <div>
+                                <span className="text-sm font-semibold text-charcoal">{round.user_score}</span>
+                                <span className="text-sm text-muted"> / {round.total_par}</span>
+                                {round.score_vs_par != null && (
+                                  <span className={`ml-2 text-sm font-medium ${
+                                    round.score_vs_par < 0 ? 'text-score-birdie' :
+                                    round.score_vs_par === 0 ? 'text-muted' :
+                                    'text-score-bogey'
+                                  }`}>
+                                    ({round.score_vs_par > 0 ? '+' : ''}{round.score_vs_par})
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           ) : (
                             <span className="text-sm text-muted">—</span>

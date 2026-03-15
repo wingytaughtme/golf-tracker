@@ -434,6 +434,7 @@ export async function GET(request: NextRequest) {
           slope_rating: round.tee_set.slope_rating,
         },
         total_par: totalPar,
+        is_nine_hole: round.round_nines.length === 1,
         round_players: round.round_players.map(rp => ({
           id: rp.id,
           player: rp.player,

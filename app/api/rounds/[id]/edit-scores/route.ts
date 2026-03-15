@@ -8,7 +8,7 @@ interface ScoreUpdate {
   putts?: number | null;
 }
 
-// Calculate handicap differential
+// Calculate handicap differential (WHS formula)
 function calculateHandicapDifferential(
   grossScore: number,
   courseRating: number,
@@ -17,7 +17,9 @@ function calculateHandicapDifferential(
 ): number {
   const adjustedCourseRating = isNineHole ? courseRating / 2 : courseRating;
   const differential = ((grossScore - adjustedCourseRating) * 113) / slopeRating;
-  return Math.round(differential * 10) / 10;
+  // 9-hole differentials are doubled to get 18-hole equivalent per WHS rules
+  const adjusted = isNineHole ? differential * 2 : differential;
+  return Math.round(adjusted * 10) / 10;
 }
 
 // POST - Edit scores on a completed round (with audit logging)
@@ -48,6 +50,9 @@ export async function POST(
           include: {
             holes: true,
           },
+        },
+        round_nines: {
+          select: { id: true },
         },
         round_players: {
           include: {
@@ -191,6 +196,7 @@ export async function POST(
 
       const courseRating = Number(round.tee_set.course_rating);
       const slopeRating = round.tee_set.slope_rating;
+      const isNineHole = round.round_nines.length === 1;
 
       for (const roundPlayerId of affectedPlayerIds) {
         // Get updated scores for this player
@@ -223,7 +229,8 @@ export async function POST(
         const handicapDifferential = calculateHandicapDifferential(
           grossScore,
           courseRating,
-          slopeRating
+          slopeRating,
+          isNineHole
         );
 
         await tx.handicapHistory.updateMany({

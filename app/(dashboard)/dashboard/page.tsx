@@ -40,6 +40,7 @@ interface RecentRound {
   tee_set: {
     name: string;
   };
+  round_nines: { id: string }[];
   round_players: {
     player: {
       id: string;
@@ -114,6 +115,9 @@ async function getRecentRounds(userId: string): Promise<RecentRound[]> {
       },
       tee_set: {
         select: { name: true },
+      },
+      round_nines: {
+        select: { id: true },
       },
       round_players: {
         include: {
@@ -206,18 +210,8 @@ async function getPlayerStats(userId: string): Promise<PlayerStats> {
       round: {
         select: {
           round_nines: {
-            select: {
-              nine: {
-                select: {
-                  holes: {
-                    select: { par: true },
-                    where: { tee_set_id: undefined as unknown as string },
-                  },
-                },
-              },
-            },
+            select: { id: true },
           },
-          tee_set_id: true,
         },
       },
     },
@@ -492,6 +486,9 @@ export default async function DashboardPage() {
                   </p>
                 </div>
                 <div className="flex items-center gap-4">
+                  {round.round_nines.length === 1 && (
+                    <span className="px-1.5 py-0.5 text-[10px] font-medium bg-secondary/15 text-secondary-700 rounded">9H</span>
+                  )}
                   {round.round_players.map((rp) => (
                     rp.gross_score && (
                       <div key={rp.player.id} className="text-right">
